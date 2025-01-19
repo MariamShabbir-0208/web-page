@@ -1,102 +1,100 @@
-import React from 'react';
-import { Box, Button, Typography } from '@mui/material';
+"use client";
+import { useShopContext } from '@/context/shopcontext';
+import { Box, Button, Typography, Paper } from '@mui/material';
 import Link from 'next/link';
 
 const TotalSection = () => {
+  const { cartItems, getCartTotal } = useShopContext();
+  
+  const subtotal = getCartTotal();
+  const shipping = subtotal > 0 ? 500 : 0; // Free shipping over certain amount could be implemented
+  const total = subtotal + shipping;
+
   return (
-    <Box
+    <Paper
+      elevation={0}
       sx={{
         backgroundColor: "#F9F1E7",
-        width: "395px",
-        height: "390px",
+        width: "100%",
+        maxWidth: "395px",
+        minHeight: "390px",
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        padding: "10px",
+        padding: "24px",
         boxSizing: "border-box",
-        marginLeft:"20px"
+        marginLeft: { xs: 0, md: "20px" },
+        position: "sticky",
+        top: "20px",
       }}
     >
-      {/* First Box */}
-      <Box
-        sx={{
-          height: "90px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          borderRadius: "8px",
-        }}
-      >
-        <Typography variant="h6" sx={{ fontWeight: "bold",fontSize:"32px" }}>
-          Cart Totals
-        </Typography>
-      </Box>
+      {/* Cart Summary Title */}
+      <Typography variant="h5" sx={{ fontWeight: "600", mb: 4, textAlign: "center" }}>
+        Cart Summary
+      </Typography>
 
-      <Box
-        sx={{
-          height: "90px",
-          display: "flex",
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: "10px",
-          borderRadius: "8px",
-        }}
-      >
-        <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+      {/* Subtotal */}
+      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: "500" }}>
           Subtotal
         </Typography>
-        <Typography variant="h6" sx={{ color:"#9F9F9F" ,fontSize:"16px" }}>
-          Rs 19000,000
+        <Typography variant="subtitle1" sx={{ color: "#9F9F9F" }}>
+          Rs. {subtotal.toLocaleString()}
         </Typography>
       </Box>
 
-      {/* Third Box with Subtotal and Rs 250,000 */}
+      {/* Shipping */}
+      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: "500" }}>
+          Shipping
+        </Typography>
+        <Typography variant="subtitle1" sx={{ color: "#9F9F9F" }}>
+          Rs. {shipping.toLocaleString()}
+        </Typography>
+      </Box>
+
+      {/* Total */}
       <Box
         sx={{
-          height: "90px",
           display: "flex",
-          flexDirection: "row",
           justifyContent: "space-between",
-          alignItems: "center",
-          padding: "10px",
-          borderRadius: "8px",
+          mt: 3,
+          pt: 2,
+          borderTop: "1px solid #E7E7E7",
         }}
       >
-        <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+        <Typography variant="h6" sx={{ fontWeight: "600" }}>
           Total
         </Typography>
-        <Typography variant="h6" sx={{ color:"#B88E2F" ,fontSize:"22px"}}>
-          Rs  19000,000
+        <Typography variant="h6" sx={{ color: "#B88E2F", fontWeight: "600" }}>
+          Rs. {total.toLocaleString()}
         </Typography>
       </Box>
 
-
-      <Box sx={{display:"flex",justifyContent:"center",alignItems:"center"}}>
-<Link href="/checkout">
-        <Button
-          variant="contained"
-          color="primary"
-          sx={{
-            padding: '8px 16px',
-            display: 'flex',
-            alignItems: 'center',
-            color: '#D4AF37',
-            marginBottom: 2,
-            backgroundColor: 'white',
-            ':hover': {
-              backgroundColor: '#D4AF37',
-              color: 'white',
-            },
-          }}
-        >
-          Check Out
-        </Button>
-      </Link>
+      {/* Checkout Button */}
+      <Box sx={{ mt: 4 }}>
+        <Link href="/checkout" style={{ textDecoration: "none", width: "100%", display: "block" }}>
+          <Button
+            variant="contained"
+            fullWidth
+            disabled={cartItems.length === 0}
+            sx={{
+              py: 1.5,
+              backgroundColor: cartItems.length === 0 ? "#E7E7E7" : "#B88E2F",
+              color: cartItems.length === 0 ? "#9F9F9F" : "white",
+              '&:hover': {
+                backgroundColor: cartItems.length === 0 ? "#E7E7E7" : "#9F7B2A",
+              },
+              textTransform: "none",
+              fontSize: "16px",
+              fontWeight: "500",
+            }}
+          >
+            {cartItems.length === 0 ? "Cart is Empty" : "Proceed to Checkout"}
+          </Button>
+        </Link>
       </Box>
-
-     
-    </Box>
+    </Paper>
   );
 };
 

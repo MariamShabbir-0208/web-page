@@ -1,178 +1,282 @@
+"use client";
 import React from "react";
-import { Box, Typography, Radio, FormControlLabel, Button, Grid, Divider } from "@mui/material";
-import Link from "next/link";
+import {
+  Box,
+  Typography,
+  Radio,
+  FormControlLabel,
+  Button,
+  Grid,
+  Divider,
+  RadioGroup,
+  Paper,
+  FormControl,
+  FormLabel,
+  Alert,
+  CircularProgress,
+  Snackbar,
+  Skeleton,
+} from "@mui/material";
+import { useShopContext } from "@/context/shopcontext";
+import { useRouter } from "next/navigation";
 
-interface Product {
-  name: string;
-  quantity: number;
-  price: number;
-}
+const PlaceOrder = () => {
+  const { cartItems, getCartTotal, clearCart } = useShopContext();
+  const [paymentMethod, setPaymentMethod] = React.useState("bank");
+  const [isProcessing, setIsProcessing] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const router = useRouter();
 
-const PlaceOrder=() => {
+  React.useEffect(() => {
+    // Simulate loading cart data
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
+  const subtotal = getCartTotal();
+  const shipping = subtotal > 0 ? 500 : 0;
+  const total = subtotal + shipping;
 
+  const handlePaymentMethodChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setPaymentMethod(event.target.value);
+  };
+
+  const handlePlaceOrder = async () => {
+    try {
+      setIsProcessing(true);
+      setError(null);
+
+      // Validate cart is not empty
+      if (cartItems.length === 0) {
+        throw new Error("Your cart is empty");
+      }
+
+      // Validate payment method is selected
+      if (!paymentMethod) {
+        throw new Error("Please select a payment method");
+      }
+
+      // Simulate order processing
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Clear cart and redirect
+      await clearCart();
+      router.push("/order-success");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to place order. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Box sx={{ maxWidth: 400, mx: "auto" }}>
+        <Paper elevation={0} sx={{ p: 3, mb: 3, backgroundColor: "#F9F1E7" }}>
+          <Skeleton variant="text" width="60%" height={40} sx={{ mb: 2 }} />
+          <Skeleton variant="rectangular" height={100} sx={{ mb: 2 }} />
+          <Skeleton variant="text" width="40%" height={30} />
+          <Skeleton variant="text" width="30%" height={30} />
+        </Paper>
+      </Box>
+    );
+  }
+
+  if (cartItems.length === 0) {
+    return (
+      <Alert severity="warning" sx={{ mt: 2 }}>
+        Your cart is empty. Please add items before proceeding to checkout.
+      </Alert>
+    );
+  }
 
   return (
-    <>
-      <Box
+    <Box sx={{ maxWidth: 400, mx: "auto" }}>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
+
+      {/* Order Summary */}
+      <Paper
+        elevation={0}
         sx={{
-          width: "400px",
-          margin: "0 auto",
-          padding: "16px",
-          border: "1px solid #ccc",
-          boxShadow: 2,
-          backgroundColor: "#fbe9e7",
+          p: 3,
+          mb: 3,
+          backgroundColor: "#F9F1E7",
         }}
       >
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={6}>
-            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-              Mottery
-            </Typography>
-            <Typography variant="body2" color="textSecondary">
-              Quantity: 1Pcs
-            </Typography>
+        <Typography variant="h6" sx={{ mb: 2, fontWeight: "600" }}>
+          Order Summary
+        </Typography>
+
+        {/* Cart Items */}
+        {cartItems.map((item) => (
+          <Grid container key={item.id} spacing={2} sx={{ mb: 2 }}>
+            <Grid item xs={7}>
+              <Typography variant="body2" sx={{ fontWeight: "500" }}>
+                {item.title}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Quantity: {item.quantity}
+              </Typography>
+            </Grid>
+            <Grid item xs={5} sx={{ textAlign: "right" }}>
+              <Typography variant="body2" sx={{ color: "#B88E2F" }}>
+                Rs. {(item.price * item.quantity).toLocaleString()}
+              </Typography>
+            </Grid>
           </Grid>
+        ))}
 
-          <Grid item xs={6} textAlign="right">
-            <Typography variant="h6" color="primary" sx={{color:"#B88E2F"}}>
-              $12000.00
-            </Typography>
-          </Grid>
-        </Grid>
+        <Divider sx={{ my: 2 }} />
 
-        <Divider sx={{ marginY: 2 }} />
-
-        <Grid container spacing={2}>
+        {/* Subtotal */}
+        <Grid container spacing={2} sx={{ mb: 1 }}>
           <Grid item xs={6}>
-            <Typography variant="body1" color="textSecondary">
+            <Typography variant="body2" color="text.secondary">
               Subtotal
             </Typography>
           </Grid>
-
-          <Grid item xs={6} textAlign="right">
-            <Typography variant="body1" fontWeight="bold">
-              $12000.00
+          <Grid item xs={6} sx={{ textAlign: "right" }}>
+            <Typography variant="body2">
+              Rs. {subtotal.toLocaleString()}
             </Typography>
           </Grid>
         </Grid>
 
-        <Grid container spacing={2} sx={{ marginTop: 1 }}>
+        {/* Shipping */}
+        <Grid container spacing={2} sx={{ mb: 1 }}>
           <Grid item xs={6}>
-            <Typography variant="h6" fontWeight="bold">
+            <Typography variant="body2" color="text.secondary">
+              Shipping
+            </Typography>
+          </Grid>
+          <Grid item xs={6} sx={{ textAlign: "right" }}>
+            <Typography variant="body2">
+              Rs. {shipping.toLocaleString()}
+            </Typography>
+          </Grid>
+        </Grid>
+
+        {/* Total */}
+        <Grid container spacing={2} sx={{ mt: 2 }}>
+          <Grid item xs={6}>
+            <Typography variant="subtitle1" sx={{ fontWeight: "600" }}>
               Total
             </Typography>
           </Grid>
-
-          <Grid item xs={6} textAlign="right">
-            <Typography variant="h6"  fontWeight="bold" sx={{color:"#B88E2F"}}>
-              $12000.00
+          <Grid item xs={6} sx={{ textAlign: "right" }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: "600", color: "#B88E2F" }}>
+              Rs. {total.toLocaleString()}
             </Typography>
           </Grid>
         </Grid>
-      </Box>
+      </Paper>
 
-      <Box
+      {/* Payment Methods */}
+      <Paper
+        elevation={0}
         sx={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "16px",
-          width: "400px",
-          margin: "0 auto",
-          padding: "16px",
-          border: "1px solid #ccc",
-          borderRadius: "8px",
-          backgroundColor: "#fbe9e7",
+          p: 3,
+          mb: 3,
+          backgroundColor: "#F9F1E7",
         }}
       >
-        {/* Box 1 */}
-        <Box
-          sx={{
-            padding: "16px",
-            backgroundColor: "#fbe9e7",
-            borderRadius: "8px",
-            boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-          }}
-        >
-          <Typography variant="h6">Direct Bank Transfer</Typography>
-        </Box>
+        <FormControl component="fieldset" error={!paymentMethod}>
+          <FormLabel component="legend" sx={{ mb: 2, color: "#333333", fontWeight: "500" }}>
+            Payment Method
+          </FormLabel>
+          <RadioGroup
+            aria-label="payment-method"
+            name="payment-method"
+            value={paymentMethod}
+            onChange={handlePaymentMethodChange}
+          >
+            <FormControlLabel
+              value="bank"
+              control={
+                <Radio
+                  sx={{
+                    color: "#B88E2F",
+                    "&.Mui-checked": {
+                      color: "#B88E2F",
+                    },
+                  }}
+                />
+              }
+              label="Direct Bank Transfer"
+            />
+            <Box sx={{ ml: 4, mb: 2, mt: 1, color: "text.secondary", fontSize: "0.875rem" }}>
+              Make your payment directly into our bank account. Please use your Order ID as the payment reference.
+            </Box>
 
-        {/* Box 2 */}
-        <Box
-          sx={{
-            padding: "16px",
-            backgroundColor: "#fbe9e7",
-            borderRadius: "8px",
-            boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-          }}
-        >
-          <Typography variant="body1">
-            Make your payment directly into our bank account. Please use your Order ID as the payment reference. Your order will not be shipped until the funds have cleared in our account.
-          </Typography>
-        </Box>
+            <FormControlLabel
+              value="cash"
+              control={
+                <Radio
+                  sx={{
+                    color: "#B88E2F",
+                    "&.Mui-checked": {
+                      color: "#B88E2F",
+                    },
+                  }}
+                />
+              }
+              label="Cash on Delivery"
+            />
+          </RadioGroup>
+        </FormControl>
+      </Paper>
 
-        {/* Box 3 */}
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-            padding: "16px",
-            backgroundColor: "#fbe9e7",
-            borderRadius: "8px",
-            boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-          }}
-        >
-          <FormControlLabel
-            control={<Radio />}
-            label="Direct Bank Transfer"
-          />
-          <FormControlLabel
-            control={<Radio />}
-            label="Cash On Delivery"
-          />
-        </Box>
+      {/* Place Order Button */}
+      <Button
+        fullWidth
+        variant="contained"
+        onClick={handlePlaceOrder}
+        disabled={isProcessing || !paymentMethod}
+        sx={{
+          py: 1.5,
+          backgroundColor: "#B88E2F",
+          color: "white",
+          "&:hover": {
+            backgroundColor: "#9F7B2A",
+          },
+          "&.Mui-disabled": {
+            backgroundColor: "#E7E7E7",
+            color: "#9F9F9F",
+          },
+          textTransform: "none",
+          fontSize: "16px",
+          fontWeight: "500",
+        }}
+      >
+        {isProcessing ? (
+          <>
+            <CircularProgress size={24} sx={{ color: "white", mr: 1 }} />
+            Processing Order...
+          </>
+        ) : (
+          "Place Order"
+        )}
+      </Button>
 
-        {/* Box 4 */}
-        <Box
-          sx={{
-            padding: "16px",
-            backgroundColor: "#fff3e0",
-            borderRadius: "8px",
-            boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-          }}
-        >
-          <Typography variant="body1">
-            Your personal data will be used to support your experience throughout this website, to manage access to your account, and for other purposes described in our
-            <span style={{ fontWeight: 'bold' }}>privacy policy.</span>
-          </Typography>
-        </Box>
-
-        {/* Box 5 */}
-        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-          <Link href="/">
-            <Button
-              variant="contained"
-              color="primary"
-              sx={{
-                padding: '8px 16px',
-                display: 'flex',
-                alignItems: 'center',
-                color: '#D4AF37',
-                marginBottom: 2,
-                backgroundColor: 'white',
-                ':hover': {
-                  backgroundColor: '#D4AF37',
-                  color: 'white',
-                },
-              }}
-            >
-              Place Order
-            </Button>
-          </Link>
-        </Box>
-      </Box>
-    </>
+      {/* Error Snackbar */}
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={() => setError(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert onClose={() => setError(null)} severity="error" sx={{ width: "100%" }}>
+          {error}
+        </Alert>
+      </Snackbar>
+    </Box>
   );
 };
 

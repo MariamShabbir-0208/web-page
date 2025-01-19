@@ -7,145 +7,214 @@ import {
   CardContent,
   Stack,
   Typography,
+  Snackbar,
 } from "@mui/material";
 import { styled } from "@mui/system";
-import Link from "next/link";
-import Image from "next/image";
 import ShareIcon from "@mui/icons-material/Share";
 import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import { PRBox, PRTypography, TiteTypography } from "./styled";
+import { useShopContext } from "@/context/shopcontext";
 
-interface ProductCardProps {
-  project: {
-    price: string;
-    title: string;
-    subtitle: string;
-    image: string;
-    id: string;
-    description?: string;
-    rating?: number;
-    color?: string;
-  };
+interface Product {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  image: string;
+  tags: string[];
+  dicountPercentage: number;
+  isNew: boolean;
 }
 
-const HoverCard = styled(Card)(({ theme }) => ({
+interface ProductCardProps {
+  project: Product;
+  onShare?: () => void;
+  onCompare?: () => void;
+  onLike?: () => void;
+  onProductClick?: () => void;
+}
+
+const StyledCard = styled(Card)({
   position: "relative",
   overflow: "hidden",
   "&:hover": {
-    backgroundColor: "#3A3A3A",
     "& .hover-content": {
+      transform: "translateY(0)",
       opacity: 1,
-      visibility: "visible",
     },
   },
-}));
+  maxWidth: "100%",
+  cursor: "pointer",
+  backgroundColor: "white",
+  boxShadow: "none",
+});
 
-const HoverContent = styled(Box)(({ theme }) => ({
+const HoverContent = styled(Box)({
   position: "absolute",
-  top: 0,
+  bottom: 0,
   left: 0,
   right: 0,
-  bottom: 0,
-  display: "flex",
-  flexDirection: "column",
-  justifyContent: "center",
-  alignItems: "center",
-  backgroundColor: "rgba(0, 0, 0, 0.6)",
+  backgroundColor: "rgba(255, 255, 255, 0.9)",
+  padding: "16px",
+  transform: "translateY(100%)",
   opacity: 0,
-  visibility: "hidden",
   transition: "all 0.3s ease-in-out",
-  color: "#FFFFFF",
-}));
+});
 
-const IconRow = styled(Box)(({ theme }) => ({
-  display: "flex",
-  justifyContent: "center",
-  gap: theme.spacing(2),
-  marginTop: theme.spacing(2),
-  padding:"0px 44px"
-}));
+const ProductCard: React.FC<ProductCardProps> = ({
+  project,
+  onShare = () => {},
+  onCompare = () => {},
+  onLike = () => {},
+  onProductClick = () => {},
+}) => {
+  const { addToCart } = useShopContext();
+  const [openSnackbar, setOpenSnackbar] = React.useState(false);
 
-const ProductCard: React.FC<ProductCardProps> = ({ project }) => {
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    addToCart(project);
+    setOpenSnackbar(true);
+  };
+
+  const handleCloseSnackbar = () => {
+    setOpenSnackbar(false);
+  };
+
+  const calculateDiscountedPrice = (price: number | string, discount: number) => {
+    const numericPrice = typeof price === 'string' ? parseFloat(price) : price;
+    if (isNaN(numericPrice)) return '0.00';
+    
+    if (discount > 0) {
+      return (numericPrice - (numericPrice * discount) / 100).toFixed(2);
+    }
+    return numericPrice.toFixed(2);
+  };
+
   return (
-    <HoverCard elevation={0}>
-      <Stack>
-        <Image
-          className="responsive-card"
-          style={{ margin: "auto" }}
-          src={project.image}
-          width={350}
-          height={330}
-          alt=""
-        />
-      </Stack>
-      <CardContent>
-        <TiteTypography variant="h6">{project.title}</TiteTypography>
-        <PRBox>
-          <Box>
-            <PRTypography variant="subtitle1">{project.subtitle}</PRTypography>
-          </Box>
-          <Box>
-            <TiteTypography variant="subtitle1">Rp{project.price}</TiteTypography>
-          </Box>
-        </PRBox>
-      </CardContent>
-      <HoverContent className="hover-content">
-      <Button
-          variant="contained"
+    <StyledCard onClick={onProductClick}>
+      <Box 
+        sx={{ 
+          position: "relative", 
+          width: "100%", 
+          paddingTop: "100%",
+          backgroundColor: "#f5f5f5" 
+        }}
+      >
+        <Box
           sx={{
-            backgroundColor: "white",
-            color: "#B88E2F",
-            fontWeight: 700,
-            padding: "8px 16px", // Slight padding for the button
-            ":hover": {
-              backgroundColor: "#D4AF37", 
-              color:"white"
-            },
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
           }}
         >
-          Add To Cart
-        </Button>
-        <IconRow>
-          <Link href="/shareProduct" passHref>
-            <Box
-              component="a"
-              display="flex"
-              alignItems="center"
-              gap={1}
-              style={{ textDecoration: "none", color: "inherit" }}
-            >
-              <ShareIcon />
-              <Typography>Share</Typography>
-            </Box>
-          </Link>
-          <Link href="/compareProducts" passHref>
-            <Box
-              component="a"
-              display="flex"
-              alignItems="center"
-              gap={1}
-              style={{ textDecoration: "none", color: "inherit" }}
-            >
-              <CompareArrowsIcon />
-              <Typography>Compare</Typography>
-            </Box>
-          </Link>
-          <Link href="/likeProducts" passHref>
-            <Box
-              component="a"
-              display="flex"
-              alignItems="center"
-              gap={1}
-              style={{ textDecoration: "none", color: "inherit" }}
-            >
-              <FavoriteBorderIcon />
-              <Typography>Like</Typography>
-            </Box>
-          </Link>
-        </IconRow>
+          <img
+            src={project.image}
+            alt={project.title}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+            }}
+          />
+        </Box>
+        {project.isNew && (
+          <Box
+            sx={{
+              position: "absolute",
+              top: 10,
+              right: 10,
+              backgroundColor: "#2EC1AC",
+              color: "white",
+              padding: "4px 8px",
+              borderRadius: "4px",
+              zIndex: 1,
+            }}
+          >
+            New
+          </Box>
+        )}
+      </Box>
+
+      <CardContent sx={{ padding: 2 }}>
+        <TiteTypography>{project.title}</TiteTypography>
+        <Stack spacing={1}>
+          <PRBox>
+            <PRTypography>
+              ${calculateDiscountedPrice(project.price, project.dicountPercentage)}
+            </PRTypography>
+            {project.dicountPercentage > 0 && (
+              <Typography
+                sx={{
+                  textDecoration: "line-through",
+                  color: "text.secondary",
+                  marginLeft: 1,
+                }}
+              >
+                ${project.price.toFixed(2)}
+              </Typography>
+            )}
+          </PRBox>
+        </Stack>
+      </CardContent>
+
+      <HoverContent className="hover-content">
+        <Stack direction="row" spacing={1} justifyContent="center">
+          <Button
+            variant="contained"
+            sx={{
+              bgcolor: "#B88E2F",
+              "&:hover": {
+                bgcolor: "#B88E2F",
+              },
+            }}
+            onClick={handleAddToCart}
+          >
+            Add to Cart
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={(e) => {
+              e.stopPropagation();
+              onShare();
+            }}
+            sx={{ minWidth: "40px", padding: 0 }}
+          >
+            <ShareIcon />
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={(e) => {
+              e.stopPropagation();
+              onCompare();
+            }}
+            sx={{ minWidth: "40px", padding: 0 }}
+          >
+            <CompareArrowsIcon />
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={(e) => {
+              e.stopPropagation();
+              onLike();
+            }}
+            sx={{ minWidth: "40px", padding: 0 }}
+          >
+            <FavoriteBorderIcon />
+          </Button>
+        </Stack>
       </HoverContent>
-    </HoverCard>
+
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        message="Added to cart"
+      />
+    </StyledCard>
   );
 };
 

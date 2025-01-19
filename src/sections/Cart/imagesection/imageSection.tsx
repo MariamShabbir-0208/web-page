@@ -1,48 +1,73 @@
-// import React from 'react'
-
-// const ImageSection = () => {
-//   return (
-//     <div>ImageSection</div>
-//   )
-// }
-
-// export default ImageSection
 "use client";
+import { useShopContext } from "@/context/shopcontext";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
-import { Box, IconButton, TextField, Typography } from "@mui/material";
-import ButtonBase from "@mui/material/ButtonBase";
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import { Box, IconButton, Typography, Alert, Skeleton } from "@mui/material";
 import Image from "next/image";
 import React from "react";
-import image1 from "../../../../public/Products images/image 3.png";
-import image2 from "../../../../public/Products images/image 2.png";
-import image3 from "../../../../public/Products images/image5.png";
-import image4 from "../../../../public/Products images/image8.png";
-import removeIcon from "../../../../public/Products images/removeicon.svg";
-
 
 const ImageSection = () => {
-  const [quantity, setQuantity] = React.useState(1);
+  const { cartItems, updateQuantity, removeFromCart } = useShopContext();
+  const [isUpdating, setIsUpdating] = React.useState<string | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
 
-  const handleIncrease = () => setQuantity(quantity + 1);
-  const handleDecrease = () => setQuantity(Math.max(1, quantity - 1));
+  const handleQuantityUpdate = async (itemId: string, newQuantity: number) => {
+    try {
+      setIsUpdating(itemId);
+      setError(null);
+      await updateQuantity(itemId, newQuantity);
+    } catch (err) {
+      setError("Failed to update quantity. Please try again.");
+    } finally {
+      setIsUpdating(null);
+    }
+  };
+
+  const handleRemoveItem = async (itemId: string) => {
+    try {
+      setIsUpdating(itemId);
+      setError(null);
+      await removeFromCart(itemId);
+    } catch (err) {
+      setError("Failed to remove item. Please try again.");
+    } finally {
+      setIsUpdating(null);
+    }
+  };
+
+  if (!cartItems || cartItems.length === 0) {
+    return (
+      <Alert severity="info" sx={{ width: "100%", mt: 2 }}>
+        Your cart is empty. Start shopping to add items to your cart!
+      </Alert>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert severity="error" sx={{ width: "100%", mt: 2 }}>
+        {error}
+      </Alert>
+    );
+  }
 
   return (
     <div>
-      {/* First Parent Box */}
+      {/* Header */}
       <Box
         sx={{
           backgroundColor: "#F9F1E7",
-          width: "780px",
+          width: "100%",
           height: "55px",
           display: "flex",
-          paddingRight:"45px",
-          flexDirection: { xs: "column", sm: "column", md: "row" },
+          paddingX: "20px",
+          flexDirection: { xs: "none", sm: "row" },
           alignItems: "center",
-          justifyContent: "space-around",
+          justifyContent: "space-between",
         }}
       >
-        {["Product", "Price", "Quantity", "SubTotal"].map((text, index) => (
+        {["Product", "Price", "Quantity", "Subtotal"].map((text, index) => (
           <Box
             key={index}
             sx={{
@@ -53,473 +78,121 @@ const ImageSection = () => {
               flex: 1,
             }}
           >
-            <Typography>{text}</Typography>
+            <Typography sx={{ fontWeight: "500" }}>{text}</Typography>
           </Box>
         ))}
       </Box>
 
-      {/* Second Parent Box */}
-      <Box
-        sx={{
-          marginTop: "20px",
-          display: "flex",
-          flexDirection: { xs: "column", sm: "column", md: "row" },
-          gap: "10px",
-        }}
-      >
-        {/* Box 1 */}
+      {/* Cart Items */}
+      {cartItems.map((item) => (
         <Box
-          sx={{
-            backgroundColor: "#F9F1E7",
-            width: "118px",
-            height: "115px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            paddingX:"8px"
-          }}
-        >
-         <Image
-            src={image1}
-            alt="Pics"
-            style={{ maxWidth: "95px", maxHeight: "85px" }}
-          />
-        </Box>
-
-        {/* Box 2 */}
-        <Box
+          key={item.id}
           sx={{
             display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
             alignItems: "center",
-            justifyContent: "start",
-            marginLeft:"5px",
-            flex: 1,
+            justifyContent: "space-between",
+            padding: "20px",
+            borderBottom: "1px solid #E7E7E7",
+            opacity: isUpdating === item.id ? 0.5 : 1,
+            transition: "opacity 0.2s",
           }}
         >
-          <Typography>Lolito</Typography>
+          {/* Product Image and Name */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              flex: 1,
+              gap: 2,
+            }}
+          >
+            <Box
+              sx={{
+                backgroundColor: "#F9F1E7",
+                width: "111px",
+                height: "90px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "8px",
+              }}
+            >
+              {isUpdating === item.id ? (
+                <Skeleton variant="rectangular" width={80} height={80} />
+              ) : (
+                <Image
+                  src={item.image}
+                  alt={item.title}
+                  width={80}
+                  height={80}
+                  style={{ objectFit: "contain" }}
+                />
+              )}
+            </Box>
+            <Typography sx={{ fontWeight: "500" }}>{item.title}</Typography>
+          </Box>
+
+          {/* Price */}
+          <Box sx={{ flex: 1, textAlign: "center" }}>
+            <Typography>Rs. {item.price.toLocaleString()}</Typography>
+          </Box>
+
+          {/* Quantity Controls */}
+          <Box
+            sx={{
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 1,
+            }}
+          >
+            <IconButton
+              onClick={() => handleQuantityUpdate(item.id, Math.max(1, item.quantity - 1))}
+              disabled={isUpdating === item.id}
+              size="small"
+              sx={{ bgcolor: "#F9F1E7" }}
+            >
+              <RemoveIcon />
+            </IconButton>
+            <Typography sx={{ mx: 2, minWidth: "20px", textAlign: "center" }}>
+              {isUpdating === item.id ? "..." : item.quantity}
+            </Typography>
+            <IconButton
+              onClick={() => handleQuantityUpdate(item.id, item.quantity + 1)}
+              disabled={isUpdating === item.id}
+              size="small"
+              sx={{ bgcolor: "#F9F1E7" }}
+            >
+              <AddIcon />
+            </IconButton>
+          </Box>
+
+          {/* Subtotal and Remove */}
+          <Box
+            sx={{
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              paddingX: 2,
+            }}
+          >
+            <Typography sx={{ color: "#B88E2F", fontWeight: "600" }}>
+              Rs. {(item.price * item.quantity).toLocaleString()}
+            </Typography>
+            <IconButton
+              onClick={() => handleRemoveItem(item.id)}
+              disabled={isUpdating === item.id}
+              size="small"
+              sx={{ color: "#B88E2F" }}
+            >
+              <DeleteOutlineIcon />
+            </IconButton>
+          </Box>
         </Box>
-
-        {/* Box 3 */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flex: 1,
-          }}
-        >
-          <Typography>7.000.000</Typography>
-        </Box>
-
-        {/* Box 4 */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "5px",
-            flex: 1,
-          }}
-        >
-          <IconButton onClick={handleDecrease} size="small">
-            <RemoveIcon />
-          </IconButton>
-          <TextField
-            value={quantity}
-            size="small"
-            inputProps={{ readOnly: true, style: { textAlign: "center" } }}
-            sx={{ width: "50px" }}
-          />
-          <IconButton onClick={handleIncrease} size="small">
-            <AddIcon />
-          </IconButton>
-        </Box>
-
-        {/* Box 5 */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flex: 1,
-          }}
-        >
-          <Typography>7.000.000</Typography>
-        </Box>
-
-        {/* Box 6 */}
-        <Box
-  component={ButtonBase}
-  sx={{
-    width: "108px",
-    height: "105px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    cursor: "pointer", 
-    transition: "background-color 0.3s ease", 
-    "&:hover": {
-      backgroundColor: "rgba(0, 0, 0, 0.1)", 
-    },
-  }}
-  onClick={() => {
-    console.log("Box clicked!");
-  }}
->
-  <Image
-    src={removeIcon} 
-    alt="remove"
-    style={{ maxWidth: "22px", maxHeight: "22px" }}
-  />
-</Box>
-      </Box>
-
-      <Box
-        sx={{
-          marginTop: "20px",
-          display: "flex",
-          flexDirection: { xs: "column", sm: "column", md: "row" },
-          gap: "10px",
-        }}
-      >
-        {/* Box 1 */}
-        <Box
-          sx={{
-            backgroundColor: "#F9F1E7",
-            width: "118px",
-            height: "115px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            paddingX:"8px"
-          }}
-        >
-         <Image
-            src={image2}
-            alt="Pics"
-            style={{ maxWidth: "95px", maxHeight: "85px" }}
-          />
-        </Box>
-
-        {/* Box 2 */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "start",
-            flex: 1,
-          }}
-        >
-          <Typography>Muggo</Typography>
-        </Box>
-
-        {/* Box 3 */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flex: 1,
-          }}
-        >
-          <Typography>2.500.000</Typography>
-        </Box>
-
-        {/* Box 4 */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "5px",
-            flex: 1,
-          }}
-        >
-          <IconButton onClick={handleDecrease} size="small">
-            <RemoveIcon />
-          </IconButton>
-          <TextField
-            value={quantity}
-            size="small"
-            inputProps={{ readOnly: true, style: { textAlign: "center" } }}
-            sx={{ width: "50px" }}
-          />
-          <IconButton onClick={handleIncrease} size="small">
-            <AddIcon />
-          </IconButton>
-        </Box>
-
-        {/* Box 5 */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flex: 1,
-          }}
-        >
-          <Typography>2.500.000</Typography>
-        </Box>
-
-        {/* Box 6 */}
-        <Box
-  component={ButtonBase}
-  sx={{
-    width: "108px",
-    height: "105px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    cursor: "pointer", 
-    transition: "background-color 0.3s ease", 
-    "&:hover": {
-      backgroundColor: "rgba(0, 0, 0, 0.1)", 
-    },
-  }}
-  onClick={() => {
-    console.log("Box clicked!");
-  }}
->
-  <Image
-    src={removeIcon} 
-    alt="remove"
-    style={{ maxWidth: "22px", maxHeight: "22px" }}
-  />
-</Box>
-      </Box>
-
- <Box
-        sx={{
-          marginTop: "20px",
-          display: "flex",
-          flexDirection: { xs: "column", sm: "column", md: "row" },
-          gap: "10px",
-        }}
-      >
-        {/* Box 1 */}
-        <Box
-          sx={{
-            backgroundColor: "#F9F1E7",
-            width: "118px",
-            height: "115px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            paddingX:"8px"
-          }}
-        >
-         <Image
-            src={image3}
-            alt="Pics"
-            style={{ maxWidth: "95px", maxHeight: "85px" }}
-          />
-        </Box>
-
-        {/* Box 2 */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "start",
-            flex: 1,
-          }}
-        >
-          <Typography>Leviosa</Typography>
-        </Box>
-
-        {/* Box 3 */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flex: 1,
-          }}
-        >
-          <Typography>4.500.000</Typography>
-        </Box>
-
-        {/* Box 4 */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "5px",
-            flex: 1,
-          }}
-        >
-          <IconButton onClick={handleDecrease} size="small">
-            <RemoveIcon />
-          </IconButton>
-          <TextField
-            value={quantity}
-            size="small"
-            inputProps={{ readOnly: true, style: { textAlign: "center" } }}
-            sx={{ width: "50px" }}
-          />
-          <IconButton onClick={handleIncrease} size="small">
-            <AddIcon />
-          </IconButton>
-        </Box>
-
-        {/* Box 5 */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flex: 1,
-          }}
-        >
-          <Typography>4.500.000</Typography>
-        </Box>
-
-        {/* Box 6 */}
-        <Box
-  component={ButtonBase}
-  sx={{
-    width: "108px",
-    height: "105px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    cursor: "pointer", 
-    transition: "background-color 0.3s ease", 
-    "&:hover": {
-      backgroundColor: "rgba(0, 0, 0, 0.1)", 
-    },
-  }}
-  onClick={() => {
-    console.log("Box clicked!");
-  }}
->
-  <Image
-    src={removeIcon} 
-    alt="remove"
-    style={{ maxWidth: "22px", maxHeight: "22px" }}
-  />
-</Box>
-      </Box>
-
-
-      <Box
-        sx={{
-          marginTop: "20px",
-          display: "flex",
-          flexDirection: { xs: "column", sm: "column", md: "row" },
-          gap: "10px",
-        }}
-      >
-        {/* Box 1 */}
-        <Box
-          sx={{
-            backgroundColor: "#F9F1E7",
-            width: "118px",
-            height: "115px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            paddingX:"8px"
-          }}
-        >
-         <Image
-            src={image4}
-            alt="Pics"
-            style={{ maxWidth: "95px", maxHeight: "85px" }}
-          />
-        </Box>
-
-        {/* Box 2 */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "start",
-            flex: 1,
-          }}
-        >
-          <Typography>Poretty,</Typography>
-        </Box>
-
-        {/* Box 3 */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flex: 1,
-          }}
-        >
-          <Typography>5000.000</Typography>
-        </Box>
-
-        {/* Box 4 */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "5px",
-            flex: 1,
-          }}
-        >
-          <IconButton onClick={handleDecrease} size="small">
-            <RemoveIcon />
-          </IconButton>
-          <TextField
-            value={quantity}
-            size="small"
-            inputProps={{ readOnly: true, style: { textAlign: "center" } }}
-            sx={{ width: "50px" }}
-          />
-          <IconButton onClick={handleIncrease} size="small">
-            <AddIcon />
-          </IconButton>
-        </Box>
-
-        {/* Box 5 */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flex: 1,
-          }}
-        >
-          <Typography>5000.000</Typography>
-        </Box>
-
-        {/* Box 6 */}
-        <Box
-  component={ButtonBase}
-  sx={{
-    width: "108px",
-    height: "105px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    cursor: "pointer", 
-    transition: "background-color 0.3s ease", 
-    "&:hover": {
-      backgroundColor: "rgba(0, 0, 0, 0.1)", 
-    },
-  }}
-  onClick={() => {
-    console.log("Box clicked!");
-  }}
->
-  <Image
-    src={removeIcon} 
-    alt="remove"
-    style={{ maxWidth: "22px", maxHeight: "22px" }}
-  />
-</Box>
-      </Box>
-
-
-
-
+      ))}
     </div>
   );
 };

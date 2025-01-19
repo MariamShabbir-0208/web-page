@@ -1,199 +1,161 @@
 "use client";
 import { useParams } from "next/navigation";
-import { allProductsData } from "@/Data/dummy";
 import { Box, Typography, Card, CardContent, CardMedia, Button, Rating, IconButton } from "@mui/material";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
 import WholeDetails from "@/sections/productpage/descirption/description";
 import RelatedProducts from "@/sections/productpage/relatedProducts/relatedProducts";
+import { getProduct } from "@/lib/sanity";
+
+interface Product {
+  _id: string;
+  title: string;
+  description: string;
+  price: number;
+  productImage: {
+    asset: {
+      url: string;
+    };
+  };
+  tags: string[];
+  dicountPercentage: number;
+  isNew: boolean;
+}
 
 const ProductPage = () => {
   const { id } = useParams();
-  const [quantity, setQuantity] = useState(1); 
-  if (!id) {
+  const [quantity, setQuantity] = useState(1);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (typeof id === 'string') {
+        try {
+          const data = await getProduct(id);
+          setProduct(data);
+        } catch (error) {
+          console.error("Error fetching product:", error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchProduct();
+  }, [id]);
+
+  if (loading || !product) {
     return <div>Loading...</div>;
   }
 
-  const product = allProductsData.find((item) => item.id === id);
+  const handleIncrement = () => {
+    setQuantity(quantity + 1);
+  };
 
-  if (!product) {
-    return (
-      <Box sx={{ textAlign: "center", padding: 4 }}>
-        <Typography variant="h6">Product not found!</Typography>
-      </Box>
-    );
-  }
-
-  const handleQuantityChange = (operation: string) => {
-    if (operation === "increase") {
-      setQuantity((prev) => prev + 1);
-    } else if (operation === "decrease" && quantity > 1) {
-      setQuantity((prev) => prev - 1);
+  const handleDecrement = () => {
+    if (quantity > 1) {
+      setQuantity(quantity - 1);
     }
   };
 
+  const calculateDiscountedPrice = () => {
+    if (product.dicountPercentage) {
+      return product.price - (product.price * product.dicountPercentage) / 100;
+    }
+    return product.price;
+  };
+
   return (
-    <>
-    <Box sx={{ maxWidth: 1200, margin: "auto", padding: 3 }}>
-      <Card sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, boxShadow: 3 }}>
-        {/* Product Image */}
-        <CardMedia
-          component="img"
-          sx={{ width: { xs: "100%", md: "50%" }, height: "auto" }}
-          image={product.image}
-          alt={product.title}
-        />
-        <CardContent sx={{ padding: 3 }}>
-          <Typography variant="h4" sx={{ marginBottom: 2 }}>
+    <Box sx={{ p: 4 }}>
+      <Card sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, boxShadow: "none" }}>
+        <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
+          <CardMedia
+            component="img"
+            image={product.productImage.asset.url}
+            alt={product.title}
+            sx={{
+              width: "100%",
+              height: "500px",
+              objectFit: "cover",
+              borderRadius: "10px",
+            }}
+          />
+          <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+            <CardMedia
+              component="img"
+              image={product.productImage.asset.url}
+              alt={product.title}
+              sx={{
+                width: "100px",
+                height: "100px",
+                objectFit: "cover",
+                borderRadius: "10px",
+              }}
+            />
+          </Box>
+        </Box>
+
+        <CardContent sx={{ flex: 1, pl: { md: 4 } }}>
+          <Typography variant="h4" gutterBottom>
             {product.title}
           </Typography>
-          <Typography variant="h5" sx={{ marginBottom: 2 }}>
-            Price: {product.price}
+          <Rating value={4} readOnly sx={{ mb: 2 }} />
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+            <Typography variant="h5" color="primary">
+              ${calculateDiscountedPrice()}
+            </Typography>
+            {product.dicountPercentage > 0 && (
+              <Typography variant="h6" sx={{ textDecoration: "line-through", color: "text.secondary" }}>
+                ${product.price}
+              </Typography>
+            )}
+          </Box>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+            {product.description}
           </Typography>
 
-  <Box sx={{ display: "flex", alignItems: "center", marginBottom: 2 }}>
-            <Rating value={product.rating} precision={0.1} readOnly />
-            <Typography variant="body2" sx={{ marginLeft: 1 }}>
-              {product.rating} / 5
-            </Typography>
-          </Box>
-         
-          <Typography variant="body1" sx={{ marginBottom: 2 }}>
-            {product.description || "No description available for this product."}
-          </Typography>
-         
-          <Box sx={{ marginBottom: 2 }}>
-            <Typography variant="body1">Color: {product.color}</Typography>
-
-
-            <Typography variant="body1" sx={{color:"black"}}>Sizes</Typography>
-
-            <Box sx={{ display: "flex", flexDirection: "row", justifyContent: "start" }}>
-  <Box
-    sx={{
-      backgroundColor: "#F9F1E7",
-      width: "60px",
-      height: "60px",
-      margin: "0px 8px",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      borderRadius: "10px",
-      border: "2px solid transparent", 
-      "&:hover": {
-        backgroundColor: "#B88E2F",
-        color:"white",
-        borderColor: "#B88E2F", 
-      },
-    }}
-  >
-    L
-  </Box>
-  <Box
-    sx={{
-      backgroundColor: "#F9F1E7",
-      width: "60px",
-      height: "60px",
-      margin: "0px 8px",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      borderRadius: "10px",
-      border: "2px solid transparent", 
-      "&:hover": {
-        backgroundColor: "#B88E2F",
-        color:"white",
-        borderColor: "#B88E2F", 
-      },
-    }}
-  >
-    XL
-  </Box>
-  <Box
-    sx={{
-      backgroundColor: "#F9F1E7",
-      width: "60px",
-      height: "60px",
-      margin: "0px 8px",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      borderRadius: "10px",
-      border: "2px solid transparent", 
-      "&:hover": {
-        backgroundColor: "#B88E2F",
-        color:"white",
-        borderColor: "#B88E2F",
-      },
-    }}
-  >
-    XS
-  </Box>
-</Box>
-
-          </Box>
-
-<Box
-  sx={{
-    display: "flex",
-    flexDirection: {
-      xs: "column",  
-      sm: "column",  
-      md: "row",    
-    },
-    justifyContent: "start",
-    gap: "15px",
-  }}
->
-          <Box sx={{ display: "flex", alignItems: "center", marginBottom: 2 }}>
-            <IconButton onClick={() => handleQuantityChange("decrease")} sx={{ padding: 1 }}>
-              <RemoveIcon />
-            </IconButton>
-            <Typography variant="h6" sx={{ marginX: 2 }}>
-              {quantity}
-            </Typography>
-            <IconButton onClick={() => handleQuantityChange("increase")} sx={{ padding: 1 }}>
-              <AddIcon />
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
+            <Box sx={{ display: "flex", alignItems: "center", border: 1, borderColor: "divider", borderRadius: 1 }}>
+              <IconButton onClick={handleDecrement}>
+                <RemoveIcon />
+              </IconButton>
+              <Typography sx={{ px: 2 }}>{quantity}</Typography>
+              <IconButton onClick={handleIncrement}>
+                <AddIcon />
+              </IconButton>
+            </Box>
+            <Button
+              variant="contained"
+              startIcon={<AddShoppingCartIcon />}
+              sx={{
+                bgcolor: "#B88E2F",
+                "&:hover": {
+                  bgcolor: "#B88E2F",
+                },
+              }}
+            >
+              Add to Cart
+            </Button>
+            <IconButton>
+              <CompareArrowsIcon />
             </IconButton>
           </Box>
 
-          <Button
-            variant="contained"
-            color="primary"
-            sx={{ padding: "8px 16px", display: "flex", alignItems: "center",color:"#D4AF37", marginBottom: 2,backgroundColor:"white",
-              ":hover": {
-                backgroundColor: "#D4AF37", 
-                color:"white"
-              },
-
-             }}
-          >
-            <AddShoppingCartIcon sx={{ marginRight: 1 }} />
-            Add To Cart
-          </Button>
-
-          {/* Compare Button */}
-          <Button
-            variant="outlined"
-            color="secondary"
-            sx={{ padding: "8px 16px", display: "flex", alignItems: "center", marginBottom: 2 }}
-          >
-            <CompareArrowsIcon sx={{ marginRight: 1 }} />
-            Compare
-          </Button>
+          <Box sx={{ mt: 3 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              Tags: {product.tags.join(", ")}
+            </Typography>
           </Box>
         </CardContent>
       </Card>
+
+      <WholeDetails description={product.description} />
+      <RelatedProducts />
     </Box>
-  <Box>
-    <WholeDetails/>
-  </Box>
-  <RelatedProducts/>
-  </>
-    
   );
 };
 

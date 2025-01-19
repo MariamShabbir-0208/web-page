@@ -4,7 +4,7 @@ import "./globals.css";
 import Header from "@/layouts/header/header";
 import Footer from "@/layouts/footer/footer";
 import { Container } from "@mui/material";
-
+import ShopContextProvider from "@/context/shopcontext";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -29,16 +29,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-    <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        
-        <Container maxWidth="lg">
-        <Header />
-          {children} {/* This will be the main content of each page */}
-          <Footer />
-        </Container>
-        
-       
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <ShopContextProvider>
+          <Container maxWidth="lg">
+            <Header />
+            {children} {/* This will be the main content of each page */}
+            <Footer />
+          </Container>
+        </ShopContextProvider>
       </body>
-  </html>
+    </html>
   );
 }

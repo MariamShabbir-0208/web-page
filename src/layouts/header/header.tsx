@@ -30,7 +30,7 @@ import {
   StyledIconButton,
   StyledToolbar,
 } from "./styled";
-import { Shopcontext } from "@/context/shopcontext";
+import { useShopContext } from "@/context/shopcontext";
 
 interface Props {
   window?: () => Window;
@@ -41,13 +41,9 @@ const drawerWidth = 240;
 const Header = (props: Props) => {
   const { window } = props;
   const [mobileOpen, setMobileOpen] = React.useState(false);
-  // const shopContext = useContext(Shopcontext);
+  const { cartItems } = useShopContext();
 
-  // if (!shopContext) {
-  //   return null;
-  // }
-
-  // const { setShowSearch } = shopContext;
+  const cartItemCount = cartItems?.reduce((total, item) => total + item.quantity, 0) || 0;
 
   const [pagesArr] = React.useState([
     { name: "Home", path:"/" },
@@ -88,7 +84,7 @@ const Header = (props: Props) => {
           <ClickableIcon>
             <Image src={Icon2} width={23} height={23} alt="Notification Icon" />
           </ClickableIcon>
-          <Badge badgeContent={4} color="warning">
+          <Badge badgeContent={cartItemCount} color="warning">
             <Link href="/cart" passHref>
               <ClickableIcon style={{ cursor: "pointer" }}>
                 <Image src={Icon3} width={23} height={23} alt="Settings Icon" />
@@ -154,22 +150,22 @@ const Header = (props: Props) => {
           </MenuBox>
 
           <IconsBox>
-  <ClickableIcon >
-    <Image src={Icon1} width={33} height={33} alt="Search Icon" />
-  </ClickableIcon>
- 
-    <ClickableIcon>
-      <Image src={Icon2} width={23} height={23} alt="Notification Icon" />
-    </ClickableIcon>
-  
-    <Badge badgeContent={4} color="warning">
-      <Link href="/cart" passHref>
-        <ClickableIcon style={{ cursor: "pointer" }}>
-          <Image src={Icon3} width={23} height={23} alt="Settings Icon" />
-        </ClickableIcon>
-      </Link>
-    </Badge>
-</IconsBox>
+            <ClickableIcon >
+              <Image src={Icon1} width={33} height={33} alt="Search Icon" />
+            </ClickableIcon>
+           
+            <ClickableIcon>
+              <Image src={Icon2} width={23} height={23} alt="Notification Icon" />
+            </ClickableIcon>
+            
+            <Badge badgeContent={cartItemCount} color="warning">
+              <Link href="/cart" passHref>
+                <ClickableIcon style={{ cursor: "pointer" }}>
+                  <Image src={Icon3} width={23} height={23} alt="Cart Icon" />
+                </ClickableIcon>
+              </Link>
+            </Badge>
+          </IconsBox>
         </StyledToolbar>
       </StyledAppbar>
 

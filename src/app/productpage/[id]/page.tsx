@@ -38,7 +38,8 @@ const ProductPage = () => {
           const data = await getProduct(id);
           setProduct(data);
         } catch (error) {
-          console.error("Error fetching product:", error);
+          //console.error("Error fetching product:", error);
+          console.log(error);
         } finally {
           setLoading(false);
         }
@@ -153,7 +154,7 @@ const ProductPage = () => {
         </CardContent>
       </Card>
 
-      <WholeDetails description={product.description} />
+      <WholeDetails  />
       <RelatedProducts />
     </Box>
   );

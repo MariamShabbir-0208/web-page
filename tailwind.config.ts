@@ -6,7 +6,11 @@ export default {
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  
   theme: {
+    debugScreens: {
+      position: ['bottom', 'right'],
+    },
     extend: {
       colors: {
         background: "var(--background)",
@@ -14,5 +18,10 @@ export default {
       },
     },
   },
-  plugins: [],
+  
+
+  
+  plugins: [
+    require('tailwindcss-debug-screens'),
+  ],
 } satisfies Config;

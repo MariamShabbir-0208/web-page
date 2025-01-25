@@ -29,7 +29,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+       <body
+        // className={`debug-screens`}
+        className={
+          process.env.NODE_ENV ==="development" ? "debug-screens" : ""
+        }
+      >
         <ShopContextProvider>
           <Container maxWidth="lg">
             <Header />

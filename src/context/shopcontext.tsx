@@ -4,7 +4,8 @@ import React, { createContext, useState, ReactNode, useContext, useEffect } from
 interface CartItem {
   id: string;
   title: string;
-  price: number;
+  subtitle: string;
+  price: string;
   image: string;
   quantity: number;
 }
@@ -62,48 +63,53 @@ const ShopContextProvider: React.FC<ShopContextProviderProps> = ({ children }) =
     setCartItems(prevItems => {
       const existingItem = prevItems.find(item => item.id === product.id);
       if (existingItem) {
-        // Create a new array with the updated item
-        const updatedItems = prevItems.map(item =>
+        return prevItems.map(item =>
           item.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
-        console.log('Updated cart:', updatedItems); // Debug log
-        return updatedItems;
       }
-      const newItems = [...prevItems, { ...product, quantity: 1 }];
-      console.log('New cart:', newItems); // Debug log
-      return newItems;
+      return [...prevItems, { ...product, quantity: 1 }];
     });
   };
 
   const removeFromCart = (productId: string) => {
-    setCartItems(prevItems => {
-      const updatedItems = prevItems.filter(item => item.id !== productId);
-      console.log('Removed from cart:', productId, 'New cart:', updatedItems); // Debug log
-      return updatedItems;
-    });
+    setCartItems(prevItems => prevItems.filter(item => item.id !== productId));
   };
 
   const updateQuantity = (productId: string, quantity: number) => {
-    if (quantity < 1) return;
-    setCartItems(prevItems => {
-      const updatedItems = prevItems.map(item =>
-        item.id === productId ? { ...item, quantity } : item
-      );
-      console.log('Updated quantity:', productId, quantity, 'New cart:', updatedItems); // Debug log
-      return updatedItems;
-    });
+    setCartItems(prevItems =>
+      prevItems.map(item =>
+        item.id === productId
+          ? { ...item, quantity: Math.max(0, quantity) }
+          : item
+      )
+    );
   };
 
   const clearCart = () => {
     setCartItems([]);
-    console.log('Cart cleared'); // Debug log
   };
 
   const getCartTotal = () => {
     return cartItems.reduce((total, item) => {
-      return total + (item.price * item.quantity);
+      // Handle different price formats
+      let numericPrice: number;
+      if (typeof item.price === 'string') {
+        // Remove all non-numeric characters except decimal point
+        const cleanPrice = item.price.replace(/[^\d.]/g, '');
+        numericPrice = parseFloat(cleanPrice);
+      } else {
+        numericPrice = item.price;
+      }
+      
+      // Check if the price is a valid number
+      if (isNaN(numericPrice)) {
+        console.warn(`Invalid price format for item ${item.id}: ${item.price}`);
+        return total;
+      }
+      
+      return total + (numericPrice * item.quantity);
     }, 0);
   };
 

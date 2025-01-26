@@ -16,15 +16,13 @@ import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import { PRBox, PRTypography, TiteTypography } from "./styled";
 import { useShopContext } from "@/context/shopcontext";
 
+// Make sure this matches the CartItem interface in shopcontext.tsx (without quantity)
 interface Product {
   id: string;
   title: string;
-  description: string;
-  price: number;
+  subtitle: string;
+  price: string;  // Changed to string to match the context type
   image: string;
-  tags: string[];
-  dicountPercentage: number;
-  isNew: boolean;
 }
 
 interface ProductCardProps {
@@ -69,149 +67,109 @@ const ProductCard: React.FC<ProductCardProps> = ({
   onLike = () => {},
   onProductClick = () => {},
 }) => {
-  const { addToCart } = useShopContext();
   const [openSnackbar, setOpenSnackbar] = React.useState(false);
+  const { addToCart } = useShopContext();
 
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleAddToCart = () => {
     addToCart(project);
     setOpenSnackbar(true);
   };
 
-  const handleCloseSnackbar = () => {
-    setOpenSnackbar(false);
-  };
-
-  const calculateDiscountedPrice = (price: number | string, discount: number) => {
-    const numericPrice = typeof price === 'string' ? parseFloat(price) : price;
-    if (isNaN(numericPrice)) return '0.00';
-    
-    if (discount > 0) {
-      return (numericPrice - (numericPrice * discount) / 100).toFixed(2);
-    }
-    return numericPrice.toFixed(2);
-  };
-
   return (
     <StyledCard onClick={onProductClick}>
-      <Box 
-        sx={{ 
-          position: "relative", 
-          width: "100%", 
-          paddingTop: "100%",
-          backgroundColor: "#f5f5f5" 
-        }}
-      >
+      <Box sx={{ position: "relative" }}>
         <Box
+          component="img"
+          src={project.image}
+          alt={project.title}
           sx={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
+            width: "100%",
+            height: "300px",
+            objectFit: "cover",
           }}
-        >
-          <img
-            src={project.image}
-            alt={project.title}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-            }}
-          />
-        </Box>
-        {project.isNew && (
-          <Box
-            sx={{
-              position: "absolute",
-              top: 10,
-              right: 10,
-              backgroundColor: "#2EC1AC",
-              color: "white",
-              padding: "4px 8px",
-              borderRadius: "4px",
-              zIndex: 1,
-            }}
-          >
-            New
-          </Box>
-        )}
+        />
       </Box>
 
       <CardContent sx={{ padding: 2 }}>
         <TiteTypography>{project.title}</TiteTypography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+          {project.subtitle}
+        </Typography>
         <Stack spacing={1}>
           <PRBox>
-            <PRTypography>
-              ${calculateDiscountedPrice(project.price, project.dicountPercentage)}
-            </PRTypography>
-            {project.dicountPercentage > 0 && (
-              <Typography
-                sx={{
-                  textDecoration: "line-through",
-                  color: "text.secondary",
-                  marginLeft: 1,
-                }}
-              >
-                ${project.price.toFixed(2)}
-              </Typography>
-            )}
+            <PRTypography>{project.price}</PRTypography>
           </PRBox>
         </Stack>
       </CardContent>
 
-      <HoverContent className="hover-content">
-        <Stack direction="row" spacing={1} justifyContent="center">
+      <Box
+        className="hover-content"
+        sx={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: "rgba(255, 255, 255, 0.9)",
+          padding: 2,
+          transform: "translateY(100%)",
+          opacity: 0,
+          transition: "all 0.3s ease-in-out",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Button
+          variant="contained"
+          sx={{
+            backgroundColor: "#B88E2F",
+            color: "white",
+            "&:hover": {
+              backgroundColor: "#97732A",
+            },
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleAddToCart();
+          }}
+        >
+          Add to Cart
+        </Button>
+        <Stack direction="row" spacing={1}>
           <Button
-            variant="contained"
-            sx={{
-              bgcolor: "#B88E2F",
-              "&:hover": {
-                bgcolor: "#B88E2F",
-              },
-            }}
-            onClick={handleAddToCart}
-          >
-            Add to Cart
-          </Button>
-          <Button
-            variant="outlined"
+            sx={{ minWidth: "auto", color: "#B88E2F" }}
             onClick={(e) => {
               e.stopPropagation();
               onShare();
             }}
-            sx={{ minWidth: "40px", padding: 0 }}
           >
             <ShareIcon />
           </Button>
           <Button
-            variant="outlined"
+            sx={{ minWidth: "auto", color: "#B88E2F" }}
             onClick={(e) => {
               e.stopPropagation();
               onCompare();
             }}
-            sx={{ minWidth: "40px", padding: 0 }}
           >
             <CompareArrowsIcon />
           </Button>
           <Button
-            variant="outlined"
+            sx={{ minWidth: "auto", color: "#B88E2F" }}
             onClick={(e) => {
               e.stopPropagation();
               onLike();
             }}
-            sx={{ minWidth: "40px", padding: 0 }}
           >
             <FavoriteBorderIcon />
           </Button>
         </Stack>
-      </HoverContent>
+      </Box>
 
       <Snackbar
         open={openSnackbar}
         autoHideDuration={3000}
-        onClose={handleCloseSnackbar}
+        onClose={() => setOpenSnackbar(false)}
         message="Added to cart"
       />
     </StyledCard>

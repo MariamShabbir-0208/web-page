@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: true,
   images: {
     domains: ['cdn.sanity.io'],
     remotePatterns: [
@@ -14,11 +15,7 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  experimental: { appDir: true },
 }
 
 module.exports = nextConfig
-module.exports = {
-  reactStrictMode: true,
-  experimental: { appDir: true },
-};
-

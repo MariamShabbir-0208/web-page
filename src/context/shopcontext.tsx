@@ -1,5 +1,6 @@
 "use client";
 import React, { createContext, useState, ReactNode, useContext, useEffect } from "react";
+import { ProductsData } from "@/Data/dummy";
 
 interface CartItem {
   id: string;
@@ -13,6 +14,7 @@ interface CartItem {
 interface ShopContextType {
   search: string;
   setSearch: React.Dispatch<React.SetStateAction<string>>;
+  searchResults: typeof ProductsData;
   showSearch: boolean;
   setShowSearch: React.Dispatch<React.SetStateAction<boolean>>;
   cartItems: CartItem[];
@@ -21,6 +23,7 @@ interface ShopContextType {
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
   getCartTotal: () => number;
+  handleSearch: (searchTerm: string) => void;
 }
 
 export const Shopcontext = createContext<ShopContextType | null>(null);
@@ -39,8 +42,32 @@ interface ShopContextProviderProps {
 
 const ShopContextProvider: React.FC<ShopContextProviderProps> = ({ children }) => {
   const [search, setSearch] = useState<string>("");
+  const [searchResults, setSearchResults] = useState(ProductsData);
   const [showSearch, setShowSearch] = useState<boolean>(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+
+  // Handle search functionality
+  const handleSearch = (searchTerm: string) => {
+    setSearch(searchTerm);
+    if (!searchTerm.trim()) {
+      setSearchResults(ProductsData);
+      return;
+    }
+
+    const filtered = ProductsData.filter((product) => {
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        product.title.toLowerCase().includes(searchLower) ||
+        product.subtitle.toLowerCase().includes(searchLower)
+      );
+    });
+    setSearchResults(filtered);
+  };
+
+  // Effect to handle search when search term changes
+  useEffect(() => {
+    handleSearch(search);
+  }, [search]);
 
   // Load cart from localStorage on mount
   useEffect(() => {
@@ -93,17 +120,14 @@ const ShopContextProvider: React.FC<ShopContextProviderProps> = ({ children }) =
 
   const getCartTotal = () => {
     return cartItems.reduce((total, item) => {
-      // Handle different price formats
       let numericPrice: number;
       if (typeof item.price === 'string') {
-        // Remove all non-numeric characters except decimal point
         const cleanPrice = item.price.replace(/[^\d.]/g, '');
         numericPrice = parseFloat(cleanPrice);
       } else {
         numericPrice = item.price;
       }
       
-      // Check if the price is a valid number
       if (isNaN(numericPrice)) {
         console.warn(`Invalid price format for item ${item.id}: ${item.price}`);
         return total;
@@ -113,20 +137,26 @@ const ShopContextProvider: React.FC<ShopContextProviderProps> = ({ children }) =
     }, 0);
   };
 
-  const value = {
-    search,
-    setSearch,
-    showSearch,
-    setShowSearch,
-    cartItems,
-    addToCart,
-    removeFromCart,
-    updateQuantity,
-    clearCart,
-    getCartTotal
-  };
-
-  return <Shopcontext.Provider value={value}>{children}</Shopcontext.Provider>;
+  return (
+    <Shopcontext.Provider
+      value={{
+        search,
+        setSearch,
+        searchResults,
+        showSearch,
+        setShowSearch,
+        cartItems,
+        addToCart,
+        removeFromCart,
+        updateQuantity,
+        clearCart,
+        getCartTotal,
+        handleSearch
+      }}
+    >
+      {children}
+    </Shopcontext.Provider>
+  );
 };
 
 export default ShopContextProvider;

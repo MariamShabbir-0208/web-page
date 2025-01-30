@@ -7,13 +7,13 @@ const TotalSection = () => {
   const { cartItems, getCartTotal } = useShopContext();
   
   const subtotal = getCartTotal();
-  const shipping = subtotal > 0 ? 500 : 0;
+  const shipping = subtotal > 0 ? 5 : 0;
   const total = subtotal + shipping;
 
   const formatPrice = (price: number) => {
-    return price.toLocaleString('en-PK', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+    return price.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD'
     });
   };
 
@@ -44,7 +44,7 @@ const TotalSection = () => {
           Subtotal
         </Typography>
         <Typography variant="subtitle1" sx={{ color: "#9F9F9F" }}>
-          Rs. {formatPrice(subtotal)}
+          {formatPrice(subtotal)}
         </Typography>
       </Box>
 
@@ -53,7 +53,7 @@ const TotalSection = () => {
           Shipping
         </Typography>
         <Typography variant="subtitle1" sx={{ color: "#9F9F9F" }}>
-          Rs. {formatPrice(shipping)}
+          {formatPrice(shipping)}
         </Typography>
       </Box>
 
@@ -64,7 +64,7 @@ const TotalSection = () => {
           Total
         </Typography>
         <Typography variant="h6" sx={{ fontWeight: "600" }}>
-          Rs. {formatPrice(total)}
+          {formatPrice(total)}
         </Typography>
       </Box>
 

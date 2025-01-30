@@ -12,6 +12,14 @@ const ImageSection = () => {
   const [isUpdating, setIsUpdating] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
+  const formatPrice = (price: string | number) => {
+    const numPrice = typeof price === 'string' ? parseFloat(price) : price;
+    return numPrice.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    });
+  };
+
   const handleQuantityUpdate = async (itemId: string, newQuantity: number) => {
     try {
       setIsUpdating(itemId);
@@ -135,7 +143,7 @@ const ImageSection = () => {
 
           {/* Price */}
           <Box sx={{ flex: 1, textAlign: "center" }}>
-            <Typography>Rs. {item.price.toLocaleString()}</Typography>
+            <Typography>{formatPrice(item.price)}</Typography>
           </Box>
 
           {/* Quantity Controls */}
@@ -149,48 +157,52 @@ const ImageSection = () => {
             }}
           >
             <IconButton
-              onClick={() => handleQuantityUpdate(item.id, Math.max(1, item.quantity - 1))}
-              disabled={isUpdating === item.id}
               size="small"
-              sx={{ bgcolor: "#F9F1E7" }}
+              onClick={() => handleQuantityUpdate(item.id, Math.max(0, item.quantity - 1))}
+              disabled={isUpdating === item.id}
+              sx={{
+                border: "1px solid #9F9F9F",
+                borderRadius: "4px",
+              }}
             >
               <RemoveIcon />
             </IconButton>
-            <Typography sx={{ mx: 2, minWidth: "20px", textAlign: "center" }}>
-              {isUpdating === item.id ? "..." : item.quantity}
+            <Typography sx={{ minWidth: "30px", textAlign: "center" }}>
+              {item.quantity}
             </Typography>
             <IconButton
+              size="small"
               onClick={() => handleQuantityUpdate(item.id, item.quantity + 1)}
               disabled={isUpdating === item.id}
-              size="small"
-              sx={{ bgcolor: "#F9F1E7" }}
+              sx={{
+                border: "1px solid #9F9F9F",
+                borderRadius: "4px",
+              }}
             >
               <AddIcon />
             </IconButton>
           </Box>
 
-          {/* Subtotal and Remove */}
-          <Box
+          {/* Subtotal */}
+          <Box sx={{ flex: 1, textAlign: "center" }}>
+            <Typography>
+              {formatPrice(parseFloat(item.price) * item.quantity)}
+            </Typography>
+          </Box>
+
+          {/* Delete Button */}
+          <IconButton
+            onClick={() => handleRemoveItem(item.id)}
+            disabled={isUpdating === item.id}
             sx={{
-              flex: 1,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              paddingX: 2,
+              color: '#B88E2F',
+              '&:hover': {
+                color: '#97732A',
+              },
             }}
           >
-            <Typography sx={{ color: "#B88E2F", fontWeight: "600" }}>
-              Rs. {(item.price * item.quantity).toLocaleString()}
-            </Typography>
-            <IconButton
-              onClick={() => handleRemoveItem(item.id)}
-              disabled={isUpdating === item.id}
-              size="small"
-              sx={{ color: "#B88E2F" }}
-            >
-              <DeleteOutlineIcon />
-            </IconButton>
-          </Box>
+            <DeleteOutlineIcon />
+          </IconButton>
         </Box>
       ))}
     </div>

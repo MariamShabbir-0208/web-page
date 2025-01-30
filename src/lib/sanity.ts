@@ -27,23 +27,21 @@ export async function getProducts() {
 }
 
 export async function getProduct(id: string) {
-  const product = await client.fetch(
-    `*[_type == "product" && _id == $id][0]{
-      _id,
-      title,
-      description,
-      price,
-      productImage {
-        asset->{
-          _id,
-          url
-        }
-      },
-      tags,
-      dicountPercentage,
-      isNew
-    }`,
-    { id }
-  )
-  return product
+  const query = `*[_type == "product" && _id == $id][0]{
+    _id,
+    title,
+    description,
+    price,
+    productImage {
+      asset->{
+        _id,
+        url
+      }
+    },
+    tags,
+    dicountPercentage,
+    isNew
+  }`;
+  const product = await client.fetch(query, { id });
+  return product;
 }

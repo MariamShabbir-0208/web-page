@@ -37,8 +37,15 @@ const PlaceOrder = () => {
   }, []);
 
   const subtotal = getCartTotal();
-  const shipping = subtotal > 0 ? 500 : 0;
+  const shipping = subtotal > 0 ? 5 : 0; 
   const total = subtotal + shipping;
+
+  const formatPrice = (price: number) => {
+    return price.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    });
+  };
 
   const handlePaymentMethodChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setPaymentMethod(event.target.value);
@@ -127,7 +134,7 @@ const PlaceOrder = () => {
             </Grid>
             <Grid item xs={5} sx={{ textAlign: "right" }}>
               <Typography variant="body2" sx={{ color: "#B88E2F" }}>
-                Rs. {(item.price * item.quantity).toLocaleString()}
+                {formatPrice(parseFloat(item.price) * item.quantity)}
               </Typography>
             </Grid>
           </Grid>
@@ -144,7 +151,7 @@ const PlaceOrder = () => {
           </Grid>
           <Grid item xs={6} sx={{ textAlign: "right" }}>
             <Typography variant="body2">
-              Rs. {subtotal.toLocaleString()}
+              {formatPrice(subtotal)}
             </Typography>
           </Grid>
         </Grid>
@@ -158,7 +165,7 @@ const PlaceOrder = () => {
           </Grid>
           <Grid item xs={6} sx={{ textAlign: "right" }}>
             <Typography variant="body2">
-              Rs. {shipping.toLocaleString()}
+              {formatPrice(shipping)}
             </Typography>
           </Grid>
         </Grid>
@@ -172,7 +179,7 @@ const PlaceOrder = () => {
           </Grid>
           <Grid item xs={6} sx={{ textAlign: "right" }}>
             <Typography variant="subtitle1" sx={{ fontWeight: "600", color: "#B88E2F" }}>
-              Rs. {total.toLocaleString()}
+              {formatPrice(total)}
             </Typography>
           </Grid>
         </Grid>
@@ -199,35 +206,15 @@ const PlaceOrder = () => {
           >
             <FormControlLabel
               value="bank"
-              control={
-                <Radio
-                  sx={{
-                    color: "#B88E2F",
-                    "&.Mui-checked": {
-                      color: "#B88E2F",
-                    },
-                  }}
-                />
-              }
+              control={<Radio />}
               label="Direct Bank Transfer"
+              sx={{ mb: 1 }}
             />
-            <Box sx={{ ml: 4, mb: 2, mt: 1, color: "text.secondary", fontSize: "0.875rem" }}>
-              Make your payment directly into our bank account. Please use your Order ID as the payment reference.
-            </Box>
-
             <FormControlLabel
               value="cash"
-              control={
-                <Radio
-                  sx={{
-                    color: "#B88E2F",
-                    "&.Mui-checked": {
-                      color: "#B88E2F",
-                    },
-                  }}
-                />
-              }
+              control={<Radio />}
               label="Cash on Delivery"
+              sx={{ mb: 1 }}
             />
           </RadioGroup>
         </FormControl>
@@ -235,20 +222,16 @@ const PlaceOrder = () => {
 
       {/* Place Order Button */}
       <Button
-        fullWidth
         variant="contained"
+        fullWidth
         onClick={handlePlaceOrder}
         disabled={isProcessing || !paymentMethod}
         sx={{
-          py: 1.5,
           backgroundColor: "#B88E2F",
           color: "white",
+          py: 2,
           "&:hover": {
-            backgroundColor: "#9F7B2A",
-          },
-          "&.Mui-disabled": {
-            backgroundColor: "#E7E7E7",
-            color: "#9F9F9F",
+            backgroundColor: "#97732A",
           },
           textTransform: "none",
           fontSize: "16px",
@@ -258,24 +241,12 @@ const PlaceOrder = () => {
         {isProcessing ? (
           <>
             <CircularProgress size={24} sx={{ color: "white", mr: 1 }} />
-            Processing Order...
+            Processing...
           </>
         ) : (
           "Place Order"
         )}
       </Button>
-
-      {/* Error Snackbar */}
-      <Snackbar
-        open={!!error}
-        autoHideDuration={6000}
-        onClose={() => setError(null)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert onClose={() => setError(null)} severity="error" sx={{ width: "100%" }}>
-          {error}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };

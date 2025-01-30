@@ -2,18 +2,45 @@
 import Box from "@mui/material/Box";
 import React from "react";
 import { PCSTypography, PCTypograpghy, ProjectsBox } from "./styled";
-import Stack from "@mui/material/Stack";
 import Grid from "@mui/material/Grid";
-import ProductCard from "@/components/ProductCard/productCard";
-import { TextField, InputAdornment } from "@mui/material";
+import { TextField, InputAdornment, Typography, Button, Snackbar } from "@mui/material";
 import SearchIcon from '@mui/icons-material/Search';
 import { useShopContext } from "@/context/shopcontext";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+
+interface Product {
+  id: string;
+  title: string;
+  subtitle: string;
+  price: string;
+  image: string;
+}
 
 const Products = () => {
-  const { search, handleSearch, searchResults } = useShopContext();
+  const router = useRouter();
+  const { search, handleSearch, searchResults, addToCart } = useShopContext();
+  const [openSnackbar, setOpenSnackbar] = React.useState(false);
+
+  const handleProductClick = (productId: string) => {
+    router.push(`/product/${productId}`);
+  };
+
+  const handleAddToCart = (e: React.MouseEvent, product: Product) => {
+    e.stopPropagation();
+    addToCart(product);
+    setOpenSnackbar(true);
+  };
+
+  const formatPrice = (price: string) => {
+    return parseFloat(price).toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    });
+  };
 
   return (
-    <Box>
+    <Box sx={{ py: 8 }}>
       <Box
         sx={{
           display: "flex",
@@ -21,6 +48,7 @@ const Products = () => {
           justifyContent: "center",
           alignItems: "center",
           gap: 3,
+          mb: 6
         }}
       >
         <PCTypograpghy variant="h2">Our Products</PCTypograpghy>
@@ -54,30 +82,122 @@ const Products = () => {
         />
       </Box>
       
-      <Stack>
-        <ProjectsBox>
-          <Grid container spacing={1}>
-            {searchResults.length === 0 ? (
+      <Grid container spacing={4}>
+        {searchResults.length === 0 ? (
+          <Box
+            sx={{
+              width: '100%',
+              textAlign: 'center',
+              py: 4,
+              color: '#666',
+            }}
+          >
+            No products found matching your search.
+          </Box>
+        ) : (
+          searchResults.map((product) => (
+            <Grid item xs={12} sm={6} md={4} lg={3} key={product.id}>
               <Box
+                onClick={() => handleProductClick(product.id)}
                 sx={{
-                  width: '100%',
-                  textAlign: 'center',
-                  py: 4,
-                  color: '#666',
+                  position: 'relative',
+                  cursor: 'pointer',
+                  overflow: 'hidden',
+                  borderRadius: 2,
+                  '&:hover': {
+                    '& img': {
+                      transform: 'scale(1.05)',
+                    },
+                    '& .overlay': {
+                      opacity: 1,
+                    },
+                  },
                 }}
               >
-                No products found matching your search.
+                <Box
+                  component="img"
+                  src={product.image}
+                  alt={product.title}
+                  sx={{
+                    width: '100%',
+                    height: '300px',
+                    objectFit: 'cover',
+                    transition: 'transform 0.3s ease-in-out',
+                  }}
+                />
+                <Box
+                  className="overlay"
+                  sx={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: 0,
+                    transition: 'opacity 0.3s ease-in-out',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      color: 'white',
+                      textAlign: 'center',
+                      p: 2,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: 2,
+                    }}
+                  >
+                    <Box
+                      component="h3"
+                      sx={{
+                        m: 0,
+                        fontSize: '1.2rem',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {product.title}
+                    </Box>
+                    <Box
+                      sx={{
+                        fontSize: '1.1rem',
+                        fontWeight: 'bold',
+                        color: '#B88E2F',
+                      }}
+                    >
+                      {formatPrice(product.price)}
+                    </Box>
+                    <Button
+                      variant="contained"
+                      onClick={(e) => handleAddToCart(e, product)}
+                      sx={{
+                        backgroundColor: '#B88E2F',
+                        color: 'white',
+                        '&:hover': {
+                          backgroundColor: '#9A7B2F',
+                        },
+                      }}
+                    >
+                      Add to Cart
+                    </Button>
+                  </Box>
+                </Box>
               </Box>
-            ) : (
-              searchResults.map((item, index) => (
-                <Grid item key={index} xs={12} sm={6} md={4} lg={3} xl={3}>
-                  <ProductCard project={item} />
-                </Grid>
-              ))
-            )}
-          </Grid>
-        </ProjectsBox>
-      </Stack>
+            </Grid>
+          ))
+        )}
+      </Grid>
+
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={3000}
+        onClose={() => setOpenSnackbar(false)}
+        message="Added to cart!"
+      />
     </Box>
   );
 };

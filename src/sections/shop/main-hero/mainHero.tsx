@@ -11,7 +11,7 @@ const mainHero = () => {
         flexDirection: "column", // Align items in a column
         justifyContent: "center", // Vertically center the content
         alignItems: "center", // Horizontally center the content
-        backgroundImage: `url('./Images/MainHero Image.png')`,
+        backgroundImage: `url('/Images/MainHero Image.png')`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",

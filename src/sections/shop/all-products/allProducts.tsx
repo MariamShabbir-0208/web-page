@@ -2,11 +2,11 @@
 import Box from "@mui/material/Box";
 import React, { useEffect, useState } from "react";
 import { PCSTypography, PCTypograpghy, ProjectsBox } from "./styled";
-import Stack from "@mui/material/Stack";
 import Grid from "@mui/material/Grid";
-import ProductCard from "@/components/ProductCard/productCard";
 import { useRouter } from "next/navigation";
 import { getProducts } from "@/lib/sanity";
+import { Button, Snackbar } from "@mui/material";
+import { useShopContext } from "@/context/shopcontext";
 
 interface Product {
   _id: string;
@@ -18,24 +18,38 @@ interface Product {
       url: string;
     };
   };
-  tags: string[];
-  dicountPercentage: number;
-  isNew: boolean;
 }
 
 const AllProducts = () => {
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const { addToCart } = useShopContext();
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
+        setLoading(true);
+        setError(null);
         const data = await getProducts();
+        
+        if (!Array.isArray(data)) {
+          console.error("Invalid data format received:", data);
+          setError("Invalid data format received from Sanity. Please check your configuration.");
+          return;
+        }
+
+        if (data.length === 0) {
+          setError("No products found in your Sanity dataset.");
+          return;
+        }
+
         setProducts(data);
-      } catch (error) {
-        // console.error("Error fetching products:", error);
-        console.log(error);
+      } catch (err) {
+        console.error("Error fetching products:", err);
+        setError("Failed to load products. Please try again later.");
       } finally {
         setLoading(false);
       }
@@ -44,145 +58,133 @@ const AllProducts = () => {
     fetchProducts();
   }, []);
 
-  const handleProductClick = (id: string) => {
-    router.push(`/productpage/${id}`);
+  const handleProductClick = (productId: string) => {
+    router.push(`/product/${productId}`);
   };
 
-  const handleShare = () => {
-    router.push('/shareProduct');
+  const handleAddToCart = (e: React.MouseEvent, product: Product) => {
+    e.stopPropagation(); // Prevent navigation when clicking the Add to Cart button
+    addToCart({
+      id: product._id,
+      title: product.title,
+      subtitle: product.description,
+      price: product.price.toString(),
+      image: product.productImage?.asset?.url || '/Images/placeholder.png'
+    });
+    setOpenSnackbar(true);
   };
 
-  const handleCompare = () => {
-    router.push('/compareProducts');
-  };
-
-  const handleLike = () => {
-    router.push('/likeProducts');
-  };
-
-  if (loading) {
-    return <Box>Loading...</Box>;
-  }
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>{error}</div>;
 
   return (
-    <Box>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
+    <Box sx={{ py: 8 }}>
+      <Box sx={{ textAlign: "center", mb: 6 }}>
+        <PCSTypography>Total Products</PCSTypography>
+        <PCTypograpghy>Our Products</PCTypograpghy>
       </Box>
-      <Stack>
-        <ProjectsBox>
-          <Grid container spacing={1}>
-            {products.map((product) => (
-              <Grid item key={product._id} xs={12} sm={6} md={4} lg={3} xl={3}>
-                <ProductCard 
-                  project={{
-                    id: product._id,
-                    title: product.title,
-                    description: product.description,
-                    price: product.price,
-                    image: product.productImage.asset.url,
-                    tags: product.tags,
-                    dicountPercentage: product.dicountPercentage,
-                    isNew: product.isNew
+      <Grid container spacing={4}>
+        {products.map((product) => (
+          <Grid item xs={12} sm={6} md={4} lg={3} key={product._id}>
+            <Box
+              onClick={() => handleProductClick(product._id)}
+              sx={{
+                position: 'relative',
+                cursor: 'pointer',
+                overflow: 'hidden',
+                borderRadius: 2,
+                '&:hover': {
+                  '& img': {
+                    transform: 'scale(1.05)',
+                  },
+                  '& .overlay': {
+                    opacity: 1,
+                  },
+                },
+              }}
+            >
+              <Box
+                component="img"
+                src={product.productImage?.asset?.url || '/Images/placeholder.png'}
+                alt={product.title}
+                sx={{
+                  width: '100%',
+                  height: '300px',
+                  objectFit: 'cover',
+                  transition: 'transform 0.3s ease-in-out',
+                }}
+              />
+              <Box
+                className="overlay"
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: 0,
+                  transition: 'opacity 0.3s ease-in-out',
+                }}
+              >
+                <Box
+                  sx={{
+                    color: 'white',
+                    textAlign: 'center',
+                    p: 2,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 2,
                   }}
-                  onProductClick={() => handleProductClick(product._id)}
-                  onShare={handleShare}
-                  onCompare={handleCompare}
-                  onLike={handleLike}
-                />
-              </Grid>
-            ))}
+                >
+                  <Box
+                    component="h3"
+                    sx={{
+                      m: 0,
+                      fontSize: '1.2rem',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    {product.title}
+                  </Box>
+                  <Box
+                    sx={{
+                      fontSize: '1.1rem',
+                      fontWeight: 'bold',
+                      color: '#B88E2F',
+                    }}
+                  >
+                    ${product.price}
+                  </Box>
+                  <Button
+                    variant="contained"
+                    onClick={(e) => handleAddToCart(e, product)}
+                    sx={{
+                      backgroundColor: '#B88E2F',
+                      color: 'white',
+                      '&:hover': {
+                        backgroundColor: '#9A7B2F',
+                      },
+                    }}
+                  >
+                    Add to Cart
+                  </Button>
+                </Box>
+              </Box>
+            </Box>
           </Grid>
-        </ProjectsBox>
-      </Stack>
-      <Box sx={{ display: "flex", flexDirection: "row", justifyContent: "center" }}>
-        <Box
-          sx={{
-            backgroundColor: "#F9F1E7",
-            width: "60px",
-            height: "60px",
-            margin: "0px 8px",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            borderRadius: "10px",
-            border: "2px solid transparent", 
-            "&:hover": {
-              backgroundColor: "#B88E2F",
-              color:"white",
-              borderColor: "#B88E2F", 
-            },
-          }}
-        >
-          1
-        </Box>
-        <Box
-          sx={{
-            backgroundColor: "#F9F1E7",
-            width: "60px",
-            height: "60px",
-            margin: "0px 8px",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            borderRadius: "10px",
-            border: "2px solid transparent", 
-            "&:hover": {
-              backgroundColor: "#B88E2F",
-              color:"white",
-              borderColor: "#B88E2F", 
-            },
-          }}
-        >
-          2
-        </Box>
-        <Box
-          sx={{
-            backgroundColor: "#F9F1E7",
-            width: "60px",
-            height: "60px",
-            margin: "0px 8px",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            borderRadius: "10px",
-            border: "2px solid transparent", // Add a transparent border for initial state
-            "&:hover": {
-              backgroundColor: "#B88E2F",
-              color:"white",
-              borderColor: "#B88E2F", // Change the border color on hover
-            },
-          }}
-        >
-          3
-        </Box>
-        <Box
-          sx={{
-            backgroundColor: "#F9F1E7",
-            width: "98px",
-            height: "60px",
-            margin: "0px 11px",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            borderRadius: "10px",
-            border: "2px solid transparent", // Add a transparent border for initial state
-            "&:hover": {
-              backgroundColor: "#B88E2F",
-              color:"white",
-              borderColor: "#B88E2F", // Change the border color on hover
-            },
-          }}
-        >
-          Next
-        </Box>
-      </Box>
+        ))}
+      </Grid>
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={3000}
+        onClose={() => setOpenSnackbar(false)}
+        message="Added to cart!"
+      />
     </Box>
   );
 };

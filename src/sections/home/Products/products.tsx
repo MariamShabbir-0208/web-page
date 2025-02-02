@@ -15,6 +15,10 @@ interface Product {
   subtitle: string;
   price: string;
   image: string;
+  description: string;
+  tags: string[];
+  discountPercentage: number;
+  isNew: boolean;
 }
 
 const Products = () => {

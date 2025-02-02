@@ -1,13 +1,15 @@
 "use client";
 import Box from "@mui/material/Box";
 import React from "react";
-import { PCSTypography, PCTypograpghy, ProjectsBox } from "./styled";
 import Grid from "@mui/material/Grid";
 import { TextField, InputAdornment, Typography, Button, Snackbar } from "@mui/material";
 import SearchIcon from '@mui/icons-material/Search';
 import { useShopContext } from "@/context/shopcontext";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+import { styled } from '@mui/material/styles';
+import dynamic from 'next/dynamic';
+
+const Image = dynamic(() => import('next/image'), { ssr: true });
 
 interface Product {
   id: string;
@@ -15,11 +17,19 @@ interface Product {
   subtitle: string;
   price: string;
   image: string;
-  description: string;
-  tags: string[];
-  discountPercentage: number;
-  isNew: boolean;
+  description?: string;
+  tags?: string[];
+  discountPercentage?: number;
+  isNew?: boolean;
 }
+
+const PCSTypography = styled(Typography)({
+  // Add styles here if needed
+});
+
+const ProjectsBox = styled(Box)({
+  // Add styles here if needed
+});
 
 const Products = () => {
   const router = useRouter();
@@ -55,7 +65,7 @@ const Products = () => {
           mb: 6
         }}
       >
-        <PCTypograpghy variant="h2">Our Products</PCTypograpghy>
+        <PCSTypography variant="h2">Our Products</PCSTypography>
         
         <TextField
           placeholder="Search products..."
@@ -118,11 +128,12 @@ const Products = () => {
                   },
                 }}
               >
-                <Box
-                  component="img"
+                <Image
                   src={product.image}
                   alt={product.title}
-                  sx={{
+                  width={500}
+                  height={300}
+                  style={{
                     width: '100%',
                     height: '300px',
                     objectFit: 'cover',

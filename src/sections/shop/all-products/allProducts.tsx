@@ -5,7 +5,7 @@ import { PCSTypography, PCTypograpghy, ProjectsBox } from "./styled";
 import Grid from "@mui/material/Grid";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getProducts } from "@/lib/sanity";
-import { Button, Snackbar, Typography } from "@mui/material";
+import { Button, CircularProgress, Snackbar, Typography } from "@mui/material";
 import { useShopContext } from "@/context/shopcontext";
 
 interface Product {
@@ -36,7 +36,9 @@ const AllProducts = () => {
       try {
         setLoading(true);
         setError(null);
+        console.log('Fetching products...');
         const data = await getProducts();
+        console.log('Received data:', data);
         
         if (!Array.isArray(data)) {
           console.error("Invalid data format received:", data);
@@ -45,6 +47,7 @@ const AllProducts = () => {
         }
 
         if (data.length === 0) {
+          console.log('No products found in dataset');
           setError("No products found in your Sanity dataset.");
           return;
         }
@@ -78,7 +81,7 @@ const AllProducts = () => {
   };
 
   const handleAddToCart = (e: React.MouseEvent, product: Product) => {
-    e.stopPropagation(); // Prevent navigation when clicking the Add to Cart button
+    e.stopPropagation();
     addToCart({
       id: product._id,
       title: product.title,
@@ -88,6 +91,25 @@ const AllProducts = () => {
     });
     setOpenSnackbar(true);
   };
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ textAlign: 'center', py: 4 }}>
+        <Typography color="error" gutterBottom>{error}</Typography>
+        <Button variant="contained" onClick={() => window.location.reload()}>
+          Try Again
+        </Button>
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -104,114 +126,53 @@ const AllProducts = () => {
 
       <ProjectsBox>
         <Grid container spacing={2}>
-          {loading ? (
-            <Box sx={{ width: '100%', textAlign: 'center', py: 4 }}>
-              <Typography>Loading products...</Typography>
-            </Box>
-          ) : error ? (
-            <Box sx={{ width: '100%', textAlign: 'center', py: 4 }}>
-              <Typography color="error">{error}</Typography>
-            </Box>
-          ) : filteredProducts.length === 0 && searchQuery ? (
-            <Box sx={{ width: '100%', textAlign: 'center', py: 4 }}>
-              <Typography>No products found matching your search.</Typography>
-            </Box>
-          ) : (
-            filteredProducts.map((product) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={product._id}>
+          {filteredProducts.map((product) => (
+            <Grid item xs={12} sm={6} md={4} lg={3} key={product._id}>
+              <Box
+                onClick={() => handleProductClick(product._id)}
+                sx={{
+                  cursor: 'pointer',
+                  p: 2,
+                  border: '1px solid #eee',
+                  borderRadius: 2,
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    boxShadow: 3,
+                    transform: 'translateY(-5px)'
+                  }
+                }}
+              >
                 <Box
-                  onClick={() => handleProductClick(product._id)}
+                  component="img"
+                  src={product.productImage?.asset?.url || '/Images/placeholder.png'}
+                  alt={product.title}
                   sx={{
-                    position: 'relative',
-                    cursor: 'pointer',
-                    overflow: 'hidden',
-                    borderRadius: 2,
-                    '&:hover': {
-                      '& img': {
-                        transform: 'scale(1.05)',
-                      },
-                      '& .overlay': {
-                        opacity: 1,
-                      },
-                    },
+                    width: '100%',
+                    height: 200,
+                    objectFit: 'cover',
+                    borderRadius: 1,
+                    mb: 2
                   }}
-                >
-                  <Box
-                    component="img"
-                    src={product.productImage?.asset?.url || '/Images/placeholder.png'}
-                    alt={product.title}
-                    sx={{
-                      width: '100%',
-                      height: '300px',
-                      objectFit: 'cover',
-                      transition: 'transform 0.3s ease-in-out',
-                    }}
-                  />
-                  <Box
-                    className="overlay"
-                    sx={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      opacity: 0,
-                      transition: 'opacity 0.3s ease-in-out',
-                    }}
+                />
+                <Typography variant="h6" gutterBottom>{product.title}</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  {product.description}
+                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="h6" color="primary">
+                    ${product.price}
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={(e) => handleAddToCart(e, product)}
                   >
-                    <Box
-                      sx={{
-                        color: 'white',
-                        textAlign: 'center',
-                        p: 2,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: 2,
-                      }}
-                    >
-                      <Box
-                        component="h3"
-                        sx={{
-                          m: 0,
-                          fontSize: '1.2rem',
-                          fontWeight: 'bold',
-                        }}
-                      >
-                        {product.title}
-                      </Box>
-                      <Box
-                        sx={{
-                          fontSize: '1.1rem',
-                          fontWeight: 'bold',
-                          color: '#B88E2F',
-                        }}
-                      >
-                        ${product.price}
-                      </Box>
-                      <Button
-                        variant="contained"
-                        onClick={(e) => handleAddToCart(e, product)}
-                        sx={{
-                          backgroundColor: '#B88E2F',
-                          color: 'white',
-                          '&:hover': {
-                            backgroundColor: '#9A7B2F',
-                          },
-                        }}
-                      >
-                        Add to Cart
-                      </Button>
-                    </Box>
-                  </Box>
+                    Add to Cart
+                  </Button>
                 </Box>
-              </Grid>
-            ))
-          )}
+              </Box>
+            </Grid>
+          ))}
         </Grid>
       </ProjectsBox>
 
@@ -223,6 +184,6 @@ const AllProducts = () => {
       />
     </Box>
   );
-};
+}
 
 export default AllProducts;

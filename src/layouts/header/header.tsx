@@ -1,12 +1,14 @@
 "use client";
-import React, { useContext } from "react";
-import Link from "next/link"; // Import Link from next/link
+import React, { useContext, useState } from "react";
+import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from 'next/navigation';
 import Icon1 from "../../../public/Images/akar-icons_search.svg";
 import Icon2 from "../../../public/Images/Heart.svg";
 import Icon3 from "../../../public/Images/Vector.svg";
 import Logo1 from "../../../public/Images/Meubel House_Logos-05.svg";
 import MenuIcon from "@mui/icons-material/Menu";
+import CloseIcon from '@mui/icons-material/Close';
 import {
   Badge,
   Box,
@@ -19,6 +21,8 @@ import {
   ListItemText,
   Stack,
   Typography,
+  TextField,
+  IconButton,
 } from "@mui/material";
 import {
   ClickableIcon,
@@ -41,9 +45,25 @@ const drawerWidth = 240;
 const Header = (props: Props) => {
   const { window } = props;
   const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const router = useRouter();
   const { cartItems } = useShopContext();
 
   const cartItemCount = cartItems?.reduce((total, item) => total + item.quantity, 0) || 0;
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
+      setShowSearch(false);
+      setSearchQuery('');
+    }
+  };
+
+  const handleDrawerToggle = () => {
+    setMobileOpen((prevState) => !prevState);
+  };
 
   const [pagesArr] = React.useState([
     { name: "Home", path:"/" },
@@ -51,12 +71,6 @@ const Header = (props: Props) => {
     { name: "Contact", path:"/contact" },
     { name: "About", path:"/about" },
   ]);
-
-
-
-  const handleDrawerToggle = () => {
-    setMobileOpen((prevState) => !prevState);
-  };
 
   const drawer = (
     <Box onClick={handleDrawerToggle} sx={{ textAlign: "center" }}>
@@ -101,63 +115,88 @@ const Header = (props: Props) => {
     window !== undefined ? () => window().document.body : undefined;
 
   return (
-    <>
-      <StyledAppbar>
+    <Box sx={{ display: "flex" }}>
+      <StyledAppbar component="nav">
         <StyledToolbar>
-          <Stack direction="row" alignItems="center">
-            <LIBox>
-              <LImage1 src={Logo1} alt="" />
-            </LIBox>
-            <Typography variant="h6" sx={{ ml: 2, color: "black" }}>
-              FURNIRO
-            </Typography>
-          </Stack>
-
           <MenuBox>
             <StyledIconButton
+              color="inherit"
               aria-label="open drawer"
-              edge="end"
+              edge="start"
               onClick={handleDrawerToggle}
+              sx={{ mr: 2, display: { sm: "none" } }}
             >
               <MenuIcon />
             </StyledIconButton>
-            <Box sx={{ display: { xs: "none", sm: "none", md: "block" } }}>
-              {pagesArr.map((page, index) => (
-                <Link href={page.path} passHref key={index}>
-                  <Button
-                    sx={{
-                      marginRight: "8px",
-                      "&:hover": {
-                        backgroundColor: "#FFF3E3",
-                        fontSize: 14,
-                      },
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: "15px",
-                        fontWeight: 550,
-                        color: "black",
-                        marginRight: "4px",
-                      }}
-                    >
-                      {page.name}
-                    </span>
-                  </Button>
-                </Link>
-              ))}
-            </Box>
+            <Link href="/">
+              <LImage1
+                src={Logo1}
+                alt="logo"
+                style={{ width: "100%", height: "auto" }}
+              />
+            </Link>
           </MenuBox>
 
+          <Box
+            sx={{
+              display: { xs: "none", sm: "flex" },
+              alignItems: "center",
+              gap: "4rem",
+            }}
+          >
+            {pagesArr.map((page, index) => (
+              <Link href={page.path} passHref key={index}>
+                <Button
+                  sx={{
+                    marginRight: "8px",
+                    "&:hover": {
+                      backgroundColor: "#FFF3E3",
+                      fontSize: 14,
+                    },
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: "15px",
+                      fontWeight: 550,
+                      color: "black",
+                      marginRight: "4px",
+                    }}
+                  >
+                    {page.name}
+                  </span>
+                </Button>
+              </Link>
+            ))}
+          </Box>
+
           <IconsBox>
-            <ClickableIcon >
-              <Image src={Icon1} width={33} height={33} alt="Search Icon" />
-            </ClickableIcon>
-           
+            {showSearch ? (
+              <Box component="form" onSubmit={handleSearchSubmit} sx={{ display: 'flex', alignItems: 'center' }}>
+                <TextField
+                  size="small"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search..."
+                  sx={{
+                    '& .MuiInputBase-root': {
+                      height: '35px',
+                      backgroundColor: 'white',
+                    }
+                  }}
+                />
+                <IconButton onClick={() => setShowSearch(false)} size="small">
+                  <CloseIcon />
+                </IconButton>
+              </Box>
+            ) : (
+              <ClickableIcon onClick={() => setShowSearch(true)}>
+                <Image src={Icon1} alt="search" />
+              </ClickableIcon>
+            )}
             <ClickableIcon>
               <Image src={Icon2} width={23} height={23} alt="Notification Icon" />
             </ClickableIcon>
-            
             <Badge badgeContent={cartItemCount} color="warning">
               <Link href="/cart" passHref>
                 <ClickableIcon style={{ cursor: "pointer" }}>
@@ -168,7 +207,6 @@ const Header = (props: Props) => {
           </IconsBox>
         </StyledToolbar>
       </StyledAppbar>
-
       <nav>
         <Drawer
           container={container}
@@ -190,7 +228,7 @@ const Header = (props: Props) => {
           {drawer}
         </Drawer>
       </nav>
-    </>
+    </Box>
   );
 };
 

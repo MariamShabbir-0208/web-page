@@ -126,7 +126,7 @@ export default function ProductPage() {
         >
           <Typography variant="h6">Product not found</Typography>
           <Typography variant="body1" sx={{ mt: 2 }}>
-            The product you're looking for doesn't exist or has been removed.
+            The product you&apos;re looking for doesn&apos;t exist or has been removed.
           </Typography>
         </Paper>
       </Container>

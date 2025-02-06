@@ -96,13 +96,13 @@ const WholeDetails = () => {
         {activeSection === 'reviews' && (
           <Box sx={{ marginBottom: 4 }}>
             <Typography variant="body1">
-              "This is the best product I've ever bought!" - Customer 1
+              &quot;This is the best product I&apos;ve ever bought!&quot; - Customer 1
             </Typography>
             <Typography variant="body1">
-              "Worth every penny, highly recommend!" - Customer 2
+              &quot;Worth every penny, highly recommend!&quot; - Customer 2
             </Typography>
             <Typography variant="body1">
-              "Good quality, but the size wasn't what I expected." - Customer 3
+              &quot;Good quality, but the size wasn&apos;t what I expected.&quot; - Customer 3
             </Typography>
           </Box>
         )}

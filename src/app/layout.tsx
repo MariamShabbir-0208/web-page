@@ -5,6 +5,7 @@ import Header from "@/layouts/header/header";
 import Footer from "@/layouts/footer/footer";
 import { Container } from "@mui/material";
 import ShopContextProvider from "@/context/shopcontext";
+import { Providers } from "./providers";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -29,19 +30,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-       <body
-        // className={`debug-screens`}
-        className={
-          process.env.NODE_ENV ==="development" ? "debug-screens" : ""
-        }
-      >
-        <ShopContextProvider>
-          <Container maxWidth="lg">
-            <Header />
-            {children} {/* This will be the main content of each page */}
-            <Footer />
-          </Container>
-        </ShopContextProvider>
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+        <Providers>
+          <ShopContextProvider>
+            <Container maxWidth="lg">
+              <Header />
+              {children} {/* This will be the main content of each page */}
+              <Footer />
+            </Container>
+          </ShopContextProvider>
+        </Providers>
       </body>
     </html>
   );

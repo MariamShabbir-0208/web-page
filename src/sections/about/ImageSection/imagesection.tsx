@@ -3,6 +3,7 @@ import { Box, Grid, Typography, Icon, Button } from '@mui/material';
 import AdminIcon from '@mui/icons-material/Person';
 import DateIcon from '@mui/icons-material/AccessTime';
 import LoyaltyIcon from '@mui/icons-material/Loyalty';
+import Image from 'next/image';
 import { mockData } from '@/Data/dummy';
 
 // Mock Data
@@ -37,31 +38,25 @@ const ImageSection: React.FC = () => {
               <Grid item xs={12} md={12}>
               <Box
   sx={{
-    width: {
-      xs: '300px', // for extra-small screens
-      sm: '300px', // for small screens
-      md: '380px', // for medium screens
-      lg: '817px', // for large screens and above
-      xl: '817px', // for large screens and above
-    },
+    width: '100%',
     height: {
-      xs: '380px', // corresponding height for smaller screens
-      sm: '380px',
-      md: '380px',
+      xs: '300px',
+      sm: '400px',
       lg: '520px',
     },
     backgroundColor: '#f0f0f0',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'relative',
   }}
 >
-  <img
+  <Image
     src={item.image}
     alt={item.title}
+    fill
     style={{
-      maxWidth: '100%',
-      maxHeight: '100%',
+      objectFit: 'contain',
     }}
   />
 </Box>

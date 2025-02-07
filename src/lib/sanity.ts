@@ -1,34 +1,25 @@
 import { createClient } from 'next-sanity'
 
-const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID;
-const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET;
-
-if (!projectId) {
-  console.error('NEXT_PUBLIC_SANITY_PROJECT_ID is not set');
-}
-
-if (!dataset) {
-  console.error('NEXT_PUBLIC_SANITY_DATASET is not set');
-}
+// Hardcode the Sanity configuration
+const projectId = 'g7s14207';
+const dataset = 'production';
+const apiVersion = "2024-01-17";
+const token = 'sk9OtmE8PhQcdOTTvMj495UPNGVuKytYsScoQMWsVsBZ2zRAIuWyRL2tRFO6X4hc9kyMlRYbkys6NzPe0IlA5a67HnlmV4vUqHWpw9SOT8i1e58NAV08CDrTiObZ48Ts5vEfoOqfTLdmD6kUfewMkmAnKsQkZ8GLa9ZIxAvubzuACXTC5dEl';
 
 export const client = createClient({
-  projectId: projectId || '',
-  dataset: dataset || 'production',
-  apiVersion: "2024-01-17",
+  projectId,
+  dataset,
+  apiVersion,
   useCdn: true,
-  token: process.env.NEXT_PUBLIC_SANITY_TOKEN
+  token
 })
 
 export async function getProducts() {
   try {
     console.log('Sanity Client Config:', {
-      projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
-      dataset: process.env.NEXT_PUBLIC_SANITY_DATASET
+      projectId,
+      dataset
     });
-
-    if (!projectId || !dataset) {
-      throw new Error('Sanity configuration is incomplete. Please check your environment variables.');
-    }
 
     const products = await client.fetch(`*[_type == "product"]{
       _id,
@@ -46,6 +37,10 @@ export async function getProducts() {
       isNew
     }`);
 
+    if (!Array.isArray(products)) {
+      throw new Error('Invalid response format from Sanity');
+    }
+
     console.log('Fetched products:', products);
     return products;
   } catch (error) {
@@ -56,10 +51,6 @@ export async function getProducts() {
 
 export async function getProduct(id: string) {
   try {
-    if (!projectId || !dataset) {
-      throw new Error('Sanity configuration is incomplete. Please check your environment variables.');
-    }
-
     const query = `*[_type == "product" && _id == $id][0]{
       _id,
       title,

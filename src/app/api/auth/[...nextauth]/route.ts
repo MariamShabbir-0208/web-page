@@ -20,6 +20,7 @@ declare module "next-auth" {
 }
 
 const handler = NextAuth({
+  secret: process.env.NEXTAUTH_SECRET || "your-development-secret-key",
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -43,11 +44,11 @@ const handler = NextAuth({
   ],
   pages: {
     signIn: "/auth/signin",
-    // signOut: "/auth/signout",
-    // error: "/auth/error",
+    error: "/auth/error",
   },
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
     async jwt({ token, user }) {

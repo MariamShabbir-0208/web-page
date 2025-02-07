@@ -1,20 +1,43 @@
 "use client";
 import { useShopContext } from '@/context/shopcontext';
-import { Box, Button, Typography, Paper } from '@mui/material';
+import { Box, Button, Typography, Paper, CircularProgress } from '@mui/material';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 
 const TotalSection = () => {
   const { cartItems, getCartTotal } = useShopContext();
+  const [isLoading, setIsLoading] = useState(true);
   
+  useEffect(() => {
+    // Short delay to ensure hydration
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   const subtotal = getCartTotal();
   const shipping = subtotal > 0 ? 5 : 0;
   const total = subtotal + shipping;
 
   const formatPrice = (price: number) => {
-    return price.toLocaleString('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    });
+    try {
+      return price.toLocaleString('en-US', {
+        style: 'currency',
+        currency: 'USD'
+      });
+    } catch (err) {
+      console.error('Error formatting price:', err);
+      return '$0.00';
+    }
   };
 
   return (

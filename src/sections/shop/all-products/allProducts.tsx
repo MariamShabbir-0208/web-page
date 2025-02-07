@@ -29,6 +29,7 @@ const AllProducts = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
   const { addToCart } = useShopContext();
 
   useEffect(() => {
@@ -36,26 +37,11 @@ const AllProducts = () => {
       try {
         setLoading(true);
         setError(null);
-        console.log('Fetching products...');
         const data = await getProducts();
-        console.log('Received data:', data);
-        
-        if (!Array.isArray(data)) {
-          console.error("Invalid data format received:", data);
-          setError("Invalid data format received from Sanity. Please check your configuration.");
-          return;
-        }
-
-        if (data.length === 0) {
-          console.log('No products found in dataset');
-          setError("No products found in your Sanity dataset.");
-          return;
-        }
-
         setProducts(data);
       } catch (err) {
         console.error("Error fetching products:", err);
-        setError("Failed to fetch products. Please try again later.");
+        setError("Failed to load products. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -77,7 +63,11 @@ const AllProducts = () => {
   }, [products, searchQuery]);
 
   const handleProductClick = (productId: string) => {
-    router.push(`/product/${productId}`);
+    if (selectedProduct === productId) {
+      router.push(`/product/${productId}`);
+    } else {
+      setSelectedProduct(productId);
+    }
   };
 
   const handleAddToCart = (e: React.MouseEvent, product: Product) => {
@@ -154,10 +144,14 @@ const AllProducts = () => {
                     mb: 2
                   }}
                 />
-                <Typography variant="h6" gutterBottom>{product.title}</Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  {product.description}
-                </Typography>
+                {selectedProduct === product._id && (
+                  <>
+                    <Typography variant="h6" gutterBottom>{product.title}</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      {product.description}
+                    </Typography>
+                  </>
+                )}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Typography variant="h6" color="primary">
                     ${product.price}

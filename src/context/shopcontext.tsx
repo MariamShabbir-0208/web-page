@@ -74,16 +74,39 @@ const ShopContextProvider: React.FC<ShopContextProviderProps> = ({ children }) =
     const savedCart = localStorage.getItem('cart');
     if (savedCart) {
       try {
-        setCartItems(JSON.parse(savedCart));
+        const parsedCart = JSON.parse(savedCart);
+        // Validate the cart data structure
+        if (Array.isArray(parsedCart) && parsedCart.every(item => 
+          item && 
+          typeof item === 'object' && 
+          'id' in item && 
+          'title' in item && 
+          'subtitle' in item && 
+          'price' in item && 
+          'image' in item && 
+          'quantity' in item
+        )) {
+          setCartItems(parsedCart);
+        } else {
+          console.error('Invalid cart data structure');
+          localStorage.removeItem('cart'); // Clear invalid data
+          setCartItems([]); // Reset to empty cart
+        }
       } catch (error) {
         console.error('Error loading cart:', error);
+        localStorage.removeItem('cart'); // Clear corrupted data
+        setCartItems([]); // Reset to empty cart
       }
     }
   }, []);
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cartItems));
+    try {
+      localStorage.setItem('cart', JSON.stringify(cartItems));
+    } catch (error) {
+      console.error('Error saving cart:', error);
+    }
   }, [cartItems]);
 
   const addToCart = (product: Omit<CartItem, 'quantity'>) => {

@@ -12,12 +12,10 @@ export default withAuth(
   }
 );
 
-// Protect these routes - add more as needed
+// Only protect routes that require authentication
 export const config = {
   matcher: [
     "/profile",
-    "/cart",
-    "/checkout",
-    // Add more protected routes here
+    // Add more protected routes here if needed
   ],
 };
